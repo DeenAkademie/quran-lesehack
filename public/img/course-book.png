@@ -1,0 +1,23 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Book Base -->
+  <path d="M24 24V104H104V24H24Z" fill="none" stroke="white" stroke-width="4"/>
+  
+  <!-- Book Pages -->
+  <path d="M32 32H96V96H32V32Z" fill="none" stroke="white" stroke-width="4"/>
+  
+  <!-- Lines representing text -->
+  <path d="M40 48H88" stroke="white" stroke-width="4"/>
+  <path d="M40 56H88" stroke="white" stroke-width="4"/>
+  <path d="M40 64H88" stroke="white" stroke-width="4"/>
+  <path d="M40 72H88" stroke="white" stroke-width="4"/>
+  <path d="M40 80H64" stroke="white" stroke-width="4"/>
+  
+  <!-- Bookmark -->
+  <path d="M72 32V16L80 24L88 16V32" stroke="white" stroke-width="4"/>
+  
+  <!-- Decorative elements -->
+  <path d="M32 96L24 104" stroke="white" stroke-width="4"/>
+  <path d="M96 96L104 104" stroke="white" stroke-width="4"/>
+  <path d="M32 32L24 24" stroke="white" stroke-width="4"/>
+  <path d="M96 32L104 24" stroke="white" stroke-width="4"/>
+</svg> 

@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Quran LeseHack
 
-## Getting Started
+Eine moderne Quran-Lernapp, mit der du den Quran in 28 Lektionen lernen kannst, basierend auf den 28 arabischen Buchstaben.
 
-First, run the development server:
+## Technologie-Stack
+
+- **Frontend**: Next.js 15, React, TypeScript
+- **UI-Komponenten**: Shadcn UI, Radix UI
+- **Styling**: Tailwind CSS
+- **Backend**: Supabase (PostgreSQL)
+- **State Management**: React Hooks, nuqs für URL-Parameter
+- **Deployment**: Vercel (geplant)
+
+## Features
+
+- 28 Lektionen, die auf den 28 arabischen Buchstaben basieren
+- Interaktive Übungen und Quizze
+- Fortschrittsverfolgung
+- Hasanat-Belohnungssystem
+- Highscores und Ranglisten
+- Benutzerprofile
+
+## Entwicklung
+
+### Voraussetzungen
+
+- Node.js 18.17 oder höher
+- npm 9.6.7 oder höher
+
+### Installation
+
+1. Repository klonen
+   ```bash
+   git clone https://github.com/username/quran-lesehack.git
+   cd quran-lesehack
+   ```
+
+2. Abhängigkeiten installieren
+   ```bash
+   npm install
+   ```
+
+3. Entwicklungsserver starten
+   ```bash
+   npm run dev
+   ```
+
+4. Öffne [http://localhost:3000](http://localhost:3000) im Browser
+
+### Build
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Start
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Projektstruktur
 
-## Learn More
+```
+src/
+├── app/                  # Next.js App Router
+│   ├── lektionen/        # Lektionen-Seiten
+│   ├── fortschritt/      # Fortschritt-Seite
+│   ├── highscores/       # Highscores-Seite
+│   ├── profil/           # Profil-Seite
+│   ├── hilfe/            # Hilfe-Seite
+│   ├── layout.tsx        # Root Layout
+│   └── page.tsx          # Homepage
+├── components/           # React-Komponenten
+│   ├── ui/               # UI-Komponenten (Shadcn)
+│   ├── main-nav.tsx      # Hauptnavigation
+│   └── lightbox.tsx      # Lightbox-Komponente
+├── lib/                  # Hilfsfunktionen und Utilities
+└── styles/               # Globale Styles
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Lizenz
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Alle Rechte vorbehalten © Deen Akademie
