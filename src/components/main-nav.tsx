@@ -96,7 +96,7 @@ export function MainNav({ className }: MainNavProps) {
             <li key={item.href}>
               <button
                 onClick={() => handleNavigation(item.href)}
-                className='flex items-center gap-3 px-4 py-3 rounded-md hover:bg-white/10 transition-colors text-white w-full text-left'
+                className='flex items-center gap-3 px-4 py-3 rounded-md hover:bg-white/10 transition-colors text-white w-full text-left cursor-pointer'
               >
                 {item.icon}
                 {item.label}

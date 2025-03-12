@@ -1,13 +1,8 @@
 'use client';
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from 'react';
+import { createContext, useContext, ReactNode } from 'react';
 import { setCookie, deleteCookie } from 'cookies-next';
+import { useAuthStore } from '@/hooks/use-auth-store';
 
 interface User {
   email: string;
@@ -16,56 +11,55 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading, updateUser, clearUser } = useAuthStore();
 
-  useEffect(() => {
-    // Check if user is logged in
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Failed to parse user from localStorage', error);
-        localStorage.removeItem('user');
-        deleteCookie('auth');
-      }
+  // Konvertiere den TanStack-Benutzer in das Format, das der AuthContext erwartet
+  const contextUser = user?.email ? { email: user.email } : null;
+
+  const login = async (email: string) => {
+    try {
+      // In a real app, this would validate credentials with an API
+      // For now, we'll just simulate a successful login
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Set a cookie for the middleware to check
+      setCookie('auth', 'authenticated', {
+        maxAge: 60 * 60 * 24 * 7, // 1 week
+        path: '/',
+      });
+
+      // Aktualisiere den Benutzer im TanStack Store
+      updateUser({ email });
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
-    setIsLoading(false);
-  }, []);
-
-  const login = async (email: string, _password: string) => {
-    // In a real app, this would validate credentials with an API
-    // For now, we'll just simulate a successful login
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const user = { email };
-    localStorage.setItem('user', JSON.stringify(user));
-
-    // Set a cookie for the middleware to check
-    setCookie('auth', 'authenticated', {
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-      path: '/',
-    });
-
-    setUser(user);
   };
 
   const logout = () => {
-    localStorage.removeItem('user');
+    // Lösche den Cookie
     deleteCookie('auth');
-    setUser(null);
+
+    // Lösche den Benutzer im TanStack Store
+    clearUser();
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user: contextUser,
+        isLoading,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
