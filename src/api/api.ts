@@ -5,7 +5,6 @@ import {
   FunctionsHttpError,
   FunctionsRelayError,
 } from '@supabase/supabase-js';
-import CryptoJS from 'crypto-js';
 import { supabase } from './supabase_client';
 import {
   SignUpDto,
@@ -100,19 +99,15 @@ function getMockData(functionName: string, body?: unknown): unknown {
 }
 
 export async function signUp(dto: SignUpDto) {
-  // const hashedPassword = CryptoJS.SHA256(dto.password).toString(
-  //   CryptoJS.enc.Hex
-  // );
-
-  return await invokeFunc('auth_register', {
-    ...dto,
-    // password: hashedPassword,
-  });
+  // Passwort-Hashing wird jetzt in der signUp-Funktion nicht mehr durchgeführt
+  return await invokeFunc('auth_register', dto);
 }
 
 export async function signIn(email: string, password: string) {
   try {
-    const hashedPassword = CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
+    // Use the native hashPassword function from utils.ts
+    const hashedPassword =
+      typeof window !== 'undefined' ? await hashPassword(password) : password;
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -141,9 +136,9 @@ export async function signIn(email: string, password: string) {
         session: {
           access_token: 'mock-token',
           refresh_token: 'mock-refresh-token',
-          user: { email },
+          user: { email, id: 'mock-id' },
         },
-        user: { email },
+        user: { email, id: 'mock-id' },
       };
     }
 
@@ -152,7 +147,9 @@ export async function signIn(email: string, password: string) {
 }
 
 export async function signOut() {
-  localStorage.clear();
+  if (typeof window !== 'undefined') {
+    localStorage.clear();
+  }
   await supabase.auth.signOut();
 }
 
@@ -253,8 +250,9 @@ export async function changePassword(
   currentPassword: string,
   password: string
 ) {
-  const hashedCurrentPassword = hashPassword(currentPassword);
-  const hashedPassword = hashPassword(password);
+  // Use the native hashPassword function from utils.ts
+  const hashedCurrentPassword = await hashPassword(currentPassword);
+  const hashedPassword = await hashPassword(password);
   return await invokeFunc('auth_change_password', {
     current_hashed_password: hashedCurrentPassword,
     new_hashed_password: hashedPassword,

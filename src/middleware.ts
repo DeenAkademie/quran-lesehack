@@ -1,67 +1,47 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Verbesserte Middleware mit Schutz gegen Endlosschleifen
+// Bare minimum middleware implementation
 export function middleware(request: NextRequest) {
-  // Prüfe, ob die Anfrage bereits von der Middleware umgeleitet wurde
-  const isRedirected =
-    request.headers.get('x-middleware-rewrite') ||
-    request.headers.get('x-middleware-next') ||
-    request.headers.get('x-middleware-redirect');
-
-  // Wenn die Anfrage bereits umgeleitet wurde, lasse sie durch
-  if (isRedirected) {
-    console.log('Request already redirected, passing through');
-    return NextResponse.next();
-  }
-
-  // Prüfe auf das Auth-Cookie
+  // Check for auth cookie
   const authCookie = request.cookies.get('auth')?.value;
+  const { pathname } = request.nextUrl;
 
-  // Definiere geschützte Routen
+  // Define protected routes
   const protectedRoutes = ['/', '/lektionen', '/videos', '/quizzes', '/profil'];
-  const isProtectedRoute = protectedRoutes.some(
-    (route) =>
-      request.nextUrl.pathname === route ||
-      request.nextUrl.pathname.startsWith(route + '/')
-  );
 
-  // Wenn der Benutzer nicht angemeldet ist und eine geschützte Route aufruft
-  if (!authCookie && isProtectedRoute) {
-    console.log(
-      'Unauthenticated access to protected route, redirecting to login'
-    );
-    const response = NextResponse.redirect(new URL('/login', request.url));
-    response.headers.set('x-middleware-cache', 'no-cache');
-    return response;
+  // Check if current path is protected
+  let isProtected = false;
+  for (const route of protectedRoutes) {
+    if (pathname === route || pathname.startsWith(route + '/')) {
+      isProtected = true;
+      break;
+    }
   }
 
-  // Wenn der Benutzer angemeldet ist und die Login-Seite aufruft
+  // If user is not logged in and tries to access a protected route
+  if (!authCookie && isProtected) {
+    // Create a modified URL for redirection
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    return NextResponse.redirect(url);
+  }
+
+  // If user is logged in and tries to access login page
   if (
     authCookie &&
-    (request.nextUrl.pathname === '/login' ||
-      request.nextUrl.pathname === '/forgot-password')
+    (pathname === '/login' || pathname === '/forgot-password')
   ) {
-    console.log('Authenticated user accessing login page, redirecting to home');
-    const response = NextResponse.redirect(new URL('/', request.url));
-    response.headers.set('x-middleware-cache', 'no-cache');
-    return response;
+    // Create a modified URL for redirection
+    const url = request.nextUrl.clone();
+    url.pathname = '/';
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
 }
 
-// Konfiguriere die Middleware für alle Pfade außer statischen Dateien
+// Configure middleware for all paths except static files and API routes
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public (public files)
-     * - debug (debug page)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public|debug).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|public|debug|api).*)'],
 };

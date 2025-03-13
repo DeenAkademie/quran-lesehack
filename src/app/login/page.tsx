@@ -29,7 +29,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      await login(email);
+      await login(email, password);
 
       // Kurze Verzögerung, um sicherzustellen, dass der Store aktualisiert wurde
       setTimeout(() => {
@@ -47,7 +47,8 @@ export default function LoginPage() {
     <div className='p-6 max-w-md mx-auto mt-10 bg-white rounded-lg shadow-md'>
       <h1 className='text-2xl font-bold mb-1 text-center'>Login</h1>
       <p className='text-gray-500 mb-6 text-center'>
-        Bitte gib deine E-Mail-Adresse ein, um dich anzumelden.
+        Bitte gib deine E-Mail-Adresse und dein Passwort ein, um dich
+        anzumelden.
       </p>
 
       <form onSubmit={handleSubmit} className='space-y-6'>

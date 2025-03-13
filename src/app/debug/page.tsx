@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { EnvironmentInfo } from '@/components/environment-info';
 
 export default function DebugPage() {
   const [cookies, setCookies] = useState<string>('');
@@ -65,6 +66,11 @@ export default function DebugPage() {
   return (
     <div className='p-6'>
       <h1 className='text-2xl font-bold mb-4'>Debug-Seite</h1>
+
+      {/* Umgebungsinformationen */}
+      <div className='mb-6'>
+        <EnvironmentInfo />
+      </div>
 
       <div className='mb-6'>
         <h2 className='text-xl font-semibold mb-2'>Render-Zähler</h2>

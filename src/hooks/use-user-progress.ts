@@ -90,7 +90,7 @@ export function useUserProgress() {
     debounce((progress: UserProgress) => {
       updateServerProgress(progress);
     }, 2000),
-    []
+    [updateServerProgress, queryClient]
   );
 
   // Funktion zum Aktualisieren des Fortschritts
@@ -107,7 +107,7 @@ export function useUserProgress() {
       // Server verzögert aktualisieren
       debouncedServerUpdate(updatedProgress);
     },
-    [localProgress, debouncedServerUpdate]
+    [localProgress, debouncedServerUpdate, queryClient]
   );
 
   // Wichtige Fortschritte sofort synchronisieren
@@ -131,7 +131,7 @@ export function useUserProgress() {
       // Sofort mit Server synchronisieren (ohne Debounce)
       updateServerProgress(updatedProgress);
     },
-    [localProgress, updateServerProgress]
+    [localProgress, updateServerProgress, queryClient]
   );
 
   return {

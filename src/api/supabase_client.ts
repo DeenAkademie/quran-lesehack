@@ -10,9 +10,11 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.replace(
 
 // Erstelle einen Mock-Client für die Entwicklung, wenn keine Umgebungsvariablen vorhanden sind
 const createMockClient = () => {
-  console.error(
-    'Supabase Umgebungsvariablen fehlen oder sind ungültig. Ein Mock-Client wird verwendet.'
-  );
+  if (typeof window !== 'undefined') {
+    console.error(
+      'Supabase Umgebungsvariablen fehlen oder sind ungültig. Ein Mock-Client wird verwendet.'
+    );
+  }
 
   return {
     auth: {
@@ -43,15 +45,48 @@ const isValidUrl = (url: string | undefined): boolean => {
     new URL(url);
     return true;
   } catch (e) {
-    console.error('Ungültige URL:', url, e);
+    if (typeof window !== 'undefined') {
+      console.error('Ungültige URL:', url, e);
+    }
     return false;
   }
 };
 
-// Erstelle den Supabase-Client nur, wenn gültige Umgebungsvariablen vorhanden sind
-export const supabase =
-  isValidUrl(supabaseUrl) && supabaseAnonKey
-    ? createClient(supabaseUrl as string, supabaseAnonKey, {
-        db: { schema: 'da_qsk_reading' },
-      })
-    : createMockClient();
+// Improved Edge Runtime detection
+const isEdgeRuntime =
+  typeof process !== 'undefined' &&
+  typeof process.env !== 'undefined' &&
+  typeof process.env.NEXT_RUNTIME === 'string' &&
+  process.env.NEXT_RUNTIME === 'edge';
+
+// Create a dummy client for Edge Runtime to prevent errors
+const createEdgeClient = () => {
+  return {
+    auth: {
+      getSession: () => Promise.resolve({ data: { session: null } }),
+      signInWithPassword: () =>
+        Promise.resolve({
+          data: null,
+          error: new Error('Edge Runtime: Auth operations not supported'),
+        }),
+      signOut: () => Promise.resolve({ error: null }),
+    },
+    functions: {
+      invoke: () =>
+        Promise.resolve({
+          data: { data: null },
+          error: new Error('Edge Runtime: Function calls not supported'),
+        }),
+      setAuth: () => {},
+    },
+  };
+};
+
+// Export the appropriate client based on the runtime environment
+export const supabase = isEdgeRuntime
+  ? createEdgeClient()
+  : isValidUrl(supabaseUrl) && supabaseAnonKey
+  ? createClient(supabaseUrl as string, supabaseAnonKey, {
+      db: { schema: 'da_qsk_reading' },
+    })
+  : createMockClient();
