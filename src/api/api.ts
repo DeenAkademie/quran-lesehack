@@ -106,12 +106,12 @@ export async function signUp(dto: SignUpDto) {
 export async function signIn(email: string, password: string) {
   try {
     // Use the native hashPassword function from utils.ts
-    const hashedPassword =
-      typeof window !== 'undefined' ? await hashPassword(password) : password;
+    // const hashedPassword =
+    //   typeof window !== 'undefined' ? await hashPassword(password) : password;
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password: hashedPassword,
+      password: password,
     });
 
     if (error) {
