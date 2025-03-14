@@ -1,14 +1,9 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-interface QuizPageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function QuizPage({ params }: QuizPageProps) {
-  const quizId = parseInt(params.id);
+// Next.js 15 Page Component
+export default function Page(props) {
+  const quizId = parseInt(props.params.id);
   
   // This would come from the database in a real implementation
   const quizzes = [

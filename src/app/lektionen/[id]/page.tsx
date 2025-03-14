@@ -43,14 +43,9 @@ const lessons = {
   // Additional lessons would be defined here
 };
 
-// Korrekte Typdefinition für Next.js 15 Page Component
-type PageProps = {
-  params: { id: string };
-  searchParams: Record<string, string | string[] | undefined>;
-};
-
-export default async function LessonPage({ params }: PageProps) {
-  const lessonId = params.id;
+// Next.js 15 Page Component
+export default function Page(props) {
+  const lessonId = props.params.id;
   const lesson = lessons[lessonId as keyof typeof lessons];
 
   if (!lesson) {

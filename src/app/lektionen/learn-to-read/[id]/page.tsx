@@ -3,14 +3,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Play, Volume2, Maximize2, MoreVertical } from "lucide-react";
 
-interface LessonPageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function LessonPage({ params }: LessonPageProps) {
-  const lessonId = parseInt(params.id);
+// Next.js 15 Page Component
+export default function Page(props) {
+  const lessonId = parseInt(props.params.id);
   
   const lessons = [
     { id: 1, title: "ا", arabic: "Alif", description: "The first letter of the Arabic alphabet" },
