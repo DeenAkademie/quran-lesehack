@@ -8,35 +8,35 @@ export function ExerciseCard() {
   const { exerciseState, updateExerciseState } = useExerciseStore();
 
   const handleStartExercise = () => {
-    // Update exercise state when starting an exercise
+    // Aktualisiere den Übungszustand beim Starten einer Übung
     updateExerciseState({
       exerciseType: 'quiz',
-      // Other properties would be set here based on the selected exercise
+      // Andere Eigenschaften würden hier basierend auf der ausgewählten Übung gesetzt werden
     });
   };
 
   return (
     <Card className='w-full'>
       <CardHeader>
-        <CardTitle>Exercise {exerciseState.exerciseNo}</CardTitle>
+        <CardTitle>Übung {exerciseState.exerciseNo}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className='space-y-4'>
           <p className='text-sm text-muted-foreground'>
-            Lesson {exerciseState.lessonNo} - Exercise{' '}
-            {exerciseState.exerciseNo} of {exerciseState.numExercisesOfLesson}
+            Lektion {exerciseState.lessonNo} - Übung {exerciseState.exerciseNo}{' '}
+            von {exerciseState.numExercisesOfLesson}
           </p>
 
           {exerciseState.questions.length > 0 ? (
             <div className='space-y-2'>
-              <p>Questions: {exerciseState.questions.length}</p>
+              <p>Fragen: {exerciseState.questions.length}</p>
               <Button onClick={handleStartExercise} className='w-full'>
-                Continue Exercise
+                Übung fortsetzen
               </Button>
             </div>
           ) : (
             <Button onClick={handleStartExercise} className='w-full'>
-              Start Exercise
+              Übung starten
             </Button>
           )}
         </div>

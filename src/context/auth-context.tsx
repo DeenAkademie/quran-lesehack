@@ -47,7 +47,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             updateUser({
               id: user.id,
               email: user.email || '',
-              // Weitere Benutzerinformationen können hier hinzugefügt werden
+              firstName: user.user_metadata?.first_name,
+              lastName: user.user_metadata?.last_name,
+              userName: user.user_metadata?.user_name,
             });
 
             // Cookie setzen für die Middleware
@@ -57,9 +59,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
           }
         }
-      } catch {
-        // Fehler beim Überprüfen der Sitzung
-        setInitialCheckDone(true);
+      } catch (error) {
+        console.error('Fehler beim Überprüfen der Sitzung:', error);
       } finally {
         setInitialCheckDone(true);
       }
@@ -97,12 +98,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Aktualisiere den Benutzer im TanStack Store
       updateUser({
-        id: (data.user as { id?: string }).id || '',
-        email: (data.user as { email?: string }).email || email,
-        // Weitere Benutzerinformationen können hier hinzugefügt werden
+        id: data.user.id,
+        email: data.user.email || email,
+        firstName: data.user.user_metadata?.first_name,
+        lastName: data.user.user_metadata?.last_name,
+        userName: data.user.user_metadata?.user_name,
       });
-    } catch {
-      // Fehlerbehandlung für Login
+    } catch (error) {
+      console.error('Login fehlgeschlagen:', error);
       throw new Error('Login fehlgeschlagen');
     }
   };
@@ -117,8 +120,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Lösche den Benutzer im TanStack Store
       clearUser();
-    } catch {
-      // Fehlerbehandlung für Logout
+    } catch (error) {
+      console.error('Logout fehlgeschlagen:', error);
       throw new Error('Logout fehlgeschlagen');
     }
   };

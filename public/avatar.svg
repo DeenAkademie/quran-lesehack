@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Hintergrund -->
+  <circle cx="100" cy="100" r="100" fill="#4AA4DE" />
+  
+  <!-- Kopf -->
+  <circle cx="100" cy="85" r="40" fill="#FFFFFF" />
+  
+  <!-- Schultern -->
+  <path d="M50,180 Q100,130 150,180" fill="#FFFFFF" />
+  
+  <!-- Augen -->
+  <circle cx="85" cy="75" r="5" fill="#4AA4DE" />
+  <circle cx="115" cy="75" r="5" fill="#4AA4DE" />
+  
+  <!-- Mund -->
+  <path d="M85,100 Q100,110 115,100" fill="none" stroke="#4AA4DE" stroke-width="3" />
+</svg> 

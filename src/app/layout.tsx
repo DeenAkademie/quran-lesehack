@@ -4,6 +4,7 @@ import "./globals.css";
 import { MainNav } from '@/components/main-nav';
 import { AuthProvider } from '@/context/auth-context';
 import { QueryProvider } from '@/providers/query-provider';
+import { ToastProvider } from '@/components/providers/toast-provider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -105,6 +106,7 @@ export default function RootLayout({
             </main>
             <div id='lightbox-container' className='hidden'></div>
             <audio id='mp3-player' className='hidden'></audio>
+            <ToastProvider />
           </AuthProvider>
         </QueryProvider>
       </body>

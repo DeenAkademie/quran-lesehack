@@ -5,71 +5,80 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export function UserProgressWidget() {
-  const { progress, isLoading, updateProgress, completeExercise } =
-    useUserProgress();
-
-  const handleNextLesson = () => {
-    updateProgress({
-      lessonNo: progress.lessonNo + 1,
-      lastActiveLessonNo: progress.lessonNo + 1,
-      exerciseNo: 1,
-      lastActiveExerciseNo: 1,
-    });
-  };
-
-  const handleCompleteExercise = () => {
-    completeExercise({
-      id: `exercise-${progress.lessonNo}-${progress.exerciseNo}`,
-      hasanat: 10,
-    });
-  };
+  const { progress, isLoading } = useUserProgress();
 
   if (isLoading) {
     return <div className='p-4 text-center'>Lade Fortschritt...</div>;
   }
 
+  // Berechne den Fortschritt in Prozent
+  const progressPercent = (progress.exercisePassedCount / 28) * 100;
+
   return (
-    <Card className='w-full'>
-      <CardHeader>
-        <CardTitle>Dein Fortschritt</CardTitle>
+    <Card className='w-full shadow-md border-0'>
+      <CardHeader className='pb-2 border-b'>
+        <CardTitle className='text-xl font-semibold'>
+          Dein Fortschritt
+        </CardTitle>
       </CardHeader>
-      <CardContent className='space-y-4'>
-        <div className='flex justify-between items-center'>
-          <span className='text-sm font-medium'>
-            Lektion {progress.lessonNo}
-          </span>
-          <span className='text-sm text-muted-foreground'>
-            Übung {progress.exerciseNo}
-          </span>
-        </div>
-
-        <Progress
-          value={(progress.exercisePassedCount / 28) * 100}
-          className='h-2'
-        />
-
-        <div className='flex justify-between items-center'>
-          <div className='flex items-center gap-2'>
-            <Image src='/img/coin.png' alt='Hasanat' width={20} height={20} />
-            <span>{progress.hasanatCounter} Hasanat</span>
+      <CardContent className='p-6'>
+        <div className='grid grid-cols-3 gap-6 mb-6'>
+          <div className='bg-slate-50 rounded-xl p-4 text-center shadow-sm'>
+            <p className='text-3xl font-bold text-primary'>
+              {progress.lessonNo}
+            </p>
+            <p className='text-sm text-slate-600 mt-1'>Aktuelle Lektion</p>
           </div>
-          <span className='text-sm text-muted-foreground'>
-            {progress.exercisePassedCount} von 28 Übungen abgeschlossen
-          </span>
+          <div className='bg-slate-50 rounded-xl p-4 text-center shadow-sm'>
+            <p className='text-3xl font-bold text-primary'>
+              {progress.exerciseNo}
+            </p>
+            <p className='text-sm text-slate-600 mt-1'>Aktuelle Übung</p>
+          </div>
+          <div className='bg-slate-50 rounded-xl p-4 text-center shadow-sm'>
+            <p className='text-3xl font-bold text-primary'>
+              {progress.exercisePassedCount}
+            </p>
+            <p className='text-sm text-slate-600 mt-1'>Abgeschlossen</p>
+          </div>
         </div>
 
-        <div className='flex gap-2 pt-2'>
-          <Button onClick={handleCompleteExercise} className='flex-1'>
-            Übung abschließen
-          </Button>
+        <div className='space-y-2 mb-6'>
+          <div className='flex justify-between text-sm'>
+            <span className='font-medium'>Gesamtfortschritt</span>
+            <span className='font-medium text-primary'>
+              {Math.round(progressPercent)}%
+            </span>
+          </div>
+          <Progress
+            value={progressPercent}
+            className='h-3 rounded-full bg-slate-100'
+          />
+        </div>
+
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center gap-2'>
+            <div className='bg-amber-100 p-1.5 rounded-full'>
+              <Image
+                src='/img/coin.png'
+                alt='Hasanat'
+                width={24}
+                height={24}
+                className='h-6 w-6'
+              />
+            </div>
+            <span className='font-medium text-slate-800'>
+              {progress.hasanatCounter} Hasanat
+            </span>
+          </div>
           <Button
-            onClick={handleNextLesson}
-            variant='outline'
-            className='flex-1'
+            className='bg-primary hover:bg-primary/90 text-white px-6 rounded-full'
+            asChild
           >
-            Nächste Lektion
+            <Link href='/lektionen'>Weiter lernen</Link>
           </Button>
         </div>
       </CardContent>

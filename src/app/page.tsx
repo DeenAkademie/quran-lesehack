@@ -5,20 +5,26 @@ import { UserProgressWidget } from '@/components/user-progress-widget';
 export default function Home() {
   return (
     <div className='flex flex-col md:flex-row'>
-      {/* Main Content */}
+      {/* Hauptinhalt */}
       <div className='flex-1 p-6'>
-        <h1 className='text-2xl font-bold mb-1'>Dashboard</h1>
-        <p className='text-gray-500 mb-6'>An overview over the past week.</p>
+        <div className='flex justify-between items-center mb-6'>
+          <div>
+            <h1 className='text-2xl font-bold mb-1'>Dashboard</h1>
+            <p className='text-gray-500'>
+              Ein Überblick über die vergangene Woche.
+            </p>
+          </div>
+        </div>
 
-        {/* Current Lesson Section */}
+        {/* Aktuelle Lektion */}
         <div className='bg-[#4AA4DE] text-white p-3 rounded-t-lg'>
-          Your current lesson - Lesson 1
+          Deine aktuelle Lektion - Lektion 1
         </div>
         <div className='bg-black mb-6 rounded-b-lg overflow-hidden'>
           <div className='relative'>
             <Image
               src='/img/lesson-video.jpg'
-              alt='Lesson Video'
+              alt='Lektionsvideo'
               width={640}
               height={360}
               className='w-full'
@@ -41,22 +47,22 @@ export default function Home() {
           </div>
         </div>
 
-        {/* User Progress Widget */}
+        {/* Fortschritts-Widget */}
         <div className='bg-[#4AA4DE] text-white p-3 rounded-t-lg'>
-          Your Progress
+          Dein Fortschritt
         </div>
         <div className='border border-gray-200 rounded-b-lg p-4 mb-6'>
           <UserProgressWidget />
         </div>
 
-        {/* Last Week Achievements */}
+        {/* Erfolge der letzten Woche */}
         <div className='bg-[#4AA4DE] text-white p-3 rounded-t-lg'>
-          Your last week achievements
+          Deine Erfolge der letzten Woche
         </div>
         <div className='border border-gray-200 rounded-b-lg'>
           <div className='grid grid-cols-3 p-4'>
             <div className='text-center'>
-              <div className='text-gray-500 mb-2'>Exercises solved</div>
+              <div className='text-gray-500 mb-2'>Gelöste Übungen</div>
               <div className='flex items-center justify-center'>
                 <div className='bg-blue-100 p-2 rounded-md'>
                   <span className='text-blue-600 font-bold'>0</span>
@@ -64,7 +70,7 @@ export default function Home() {
               </div>
             </div>
             <div className='text-center'>
-              <div className='text-gray-500 mb-2'>Hasanat achieved</div>
+              <div className='text-gray-500 mb-2'>Erreichte Hasanat</div>
               <div className='flex items-center justify-center'>
                 <div className='bg-blue-100 p-2 rounded-md'>
                   <span className='text-blue-600 font-bold'>0</span>
@@ -72,7 +78,7 @@ export default function Home() {
               </div>
             </div>
             <div className='text-center'>
-              <div className='text-gray-500 mb-2'>Progress reached</div>
+              <div className='text-gray-500 mb-2'>Erreichter Fortschritt</div>
               <div className='flex items-center justify-center'>
                 <div className='bg-blue-100 p-2 rounded-md'>
                   <span className='text-blue-600 font-bold'>0.4%</span>
@@ -83,12 +89,12 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Profile Sidebar */}
+      {/* Profil-Seitenleiste */}
       <div className='w-full md:w-64 p-6 flex flex-col items-center'>
         <div className='mb-4'>
           <Image
-            src='/img/avatar.jpg'
-            alt='Profile'
+            src='/avatar.svg'
+            alt='Profil'
             width={80}
             height={80}
             className='rounded-full border-4 border-gray-200'
@@ -97,66 +103,20 @@ export default function Home() {
         <h2 className='text-xl font-bold mb-6'>Bilgekaaan xxx</h2>
 
         <div className='w-full border border-gray-200 rounded-lg p-4 mb-4'>
-          <div className='text-gray-500 mb-2'>Current course</div>
-          <div className='flex items-center gap-2'>
-            <div className='bg-blue-100 p-1 rounded'>
-              <BookOpen className='h-4 w-4 text-blue-600' />
-            </div>
-            <span className='font-medium'>Learn to read</span>
-          </div>
+          <div className='text-gray-500 mb-2'>Aktueller Kurs</div>
+          <div className='font-bold'>Quran LeseHack</div>
         </div>
 
-        <div className='w-full bg-gradient-to-br from-[#4AA4DE] to-[#63B4E8] rounded-lg p-4 text-white'>
-          <div className='flex justify-between items-center mb-4'>
-            <h3 className='font-bold'>Hasanat Counter</h3>
-            <div className='bg-white/20 p-1 rounded'>
-              <svg
-                className='h-4 w-4 text-white'
-                viewBox='0 0 24 24'
-                fill='none'
-                xmlns='http://www.w3.org/2000/svg'
-              >
-                <path
-                  d='M12 5V19M5 12H19'
-                  stroke='currentColor'
-                  strokeWidth='2'
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                />
-              </svg>
-            </div>
-          </div>
-          <div className='flex items-center gap-2'>
-            <Image
-              src='/img/coin.png'
-              alt='Hasanat Coin'
-              width={24}
-              height={24}
-            />
-            <span className='text-2xl font-bold'>0</span>
-          </div>
+        <div className='w-full border border-gray-200 rounded-lg p-4 mb-4'>
+          <div className='text-gray-500 mb-2'>Mitglied seit</div>
+          <div className='font-bold'>März 2023</div>
+        </div>
+
+        <div className='w-full border border-gray-200 rounded-lg p-4'>
+          <div className='text-gray-500 mb-2'>Gesamtpunkte</div>
+          <div className='font-bold'>1250</div>
         </div>
       </div>
     </div>
-  );
-}
-
-function BookOpen(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns='http://www.w3.org/2000/svg'
-      width='24'
-      height='24'
-      viewBox='0 0 24 24'
-      fill='none'
-      stroke='currentColor'
-      strokeWidth='2'
-      strokeLinecap='round'
-      strokeLinejoin='round'
-    >
-      <path d='M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z' />
-      <path d='M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z' />
-    </svg>
   );
 }

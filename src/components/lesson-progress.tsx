@@ -18,9 +18,9 @@ export function LessonProgress() {
   return (
     <div className='space-y-4'>
       <div className='flex justify-between items-center'>
-        <h3 className='font-medium'>Lesson Progress</h3>
+        <h3 className='font-medium'>Lektionsfortschritt</h3>
         <span className='text-sm text-muted-foreground'>
-          Lesson {lessonState.lessonNo}
+          Lektion {lessonState.lessonNo}
         </span>
       </div>
 
@@ -31,13 +31,13 @@ export function LessonProgress() {
 
       <div className='flex justify-between items-center'>
         <span className='text-sm text-muted-foreground'>
-          Exercises completed: {lessonState.exercisePassedCount}
+          Übungen abgeschlossen: {lessonState.exercisePassedCount}
         </span>
         <button
           onClick={handleNextLesson}
           className='px-3 py-1 bg-primary text-primary-foreground text-sm rounded-md'
         >
-          Next Lesson
+          Nächste Lektion
         </button>
       </div>
     </div>

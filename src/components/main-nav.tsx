@@ -24,31 +24,35 @@ export function MainNav({ className }: MainNavProps) {
   const { user } = useAuth();
   const router = useRouter();
 
-  // Menu items for authenticated users
+  // Menüpunkte für angemeldete Benutzer
   const authenticatedMenuItems = [
-    { href: '/', label: 'Home', icon: <Home className='h-5 w-5' /> },
+    { href: '/', label: 'Startseite', icon: <Home className='h-5 w-5' /> },
     {
       href: '/lektionen',
-      label: 'Your courses',
+      label: 'Deine Kurse',
       icon: <BookOpen className='h-5 w-5' />,
     },
     { href: '/videos', label: 'Videos', icon: <Video className='h-5 w-5' /> },
     {
       href: '/quizzes',
-      label: 'Quizzes',
+      label: 'Übungen',
       icon: <FileQuestion className='h-5 w-5' />,
     },
-    { href: '/logout', label: 'Logout', icon: <LogOut className='h-5 w-5' /> },
-    { href: '/about', label: 'About us', icon: <Info className='h-5 w-5' /> },
+    {
+      href: '/logout',
+      label: 'Abmelden',
+      icon: <LogOut className='h-5 w-5' />,
+    },
+    { href: '/about', label: 'Über uns', icon: <Info className='h-5 w-5' /> },
   ];
 
-  // Menu items for unauthenticated users
+  // Menüpunkte für nicht angemeldete Benutzer
   const unauthenticatedMenuItems = [
-    { href: '/login', label: 'Login', icon: <LogIn className='h-5 w-5' /> },
-    { href: '/about', label: 'About us', icon: <Info className='h-5 w-5' /> },
+    { href: '/login', label: 'Anmelden', icon: <LogIn className='h-5 w-5' /> },
+    { href: '/about', label: 'Über uns', icon: <Info className='h-5 w-5' /> },
   ];
 
-  // Choose menu items based on authentication status
+  // Wähle Menüpunkte basierend auf dem Authentifizierungsstatus
   const menuItems = user ? authenticatedMenuItems : unauthenticatedMenuItems;
 
   const handleNavigation = (href: string) => {
@@ -74,20 +78,20 @@ export function MainNav({ className }: MainNavProps) {
           isMenuOpen ? 'translate-x-0' : ''
         } ${className}`}
       >
-        {/* Deen Akademie logo */}
-        <div className='p-4 flex items-center justify-center mb-6'>
-          <div className='bg-white rounded-full p-2 w-12 h-12 flex items-center justify-center'>
+        {/* Deen Akademie Logo */}
+        <div className='p-4 flex items-center justify-start mb-6'>
+          <div className='rounded-full p-2 flex items-center justify-center'>
             <Image
-              src='/img/logo.png'
+              src='/deen-logo.png'
               alt='Deen Akademie Logo'
-              width={30}
-              height={30}
+              width={60}
+              height={60}
               priority
             />
           </div>
           <div className='ml-2'>
-            <div className='text-white font-bold'>Deen</div>
-            <div className='text-white text-sm'>Akademie</div>
+            <div className='text-white text-xl font-bold'>Deen</div>
+            <div className='text-white text-xl '>Akademie</div>
           </div>
         </div>
 
