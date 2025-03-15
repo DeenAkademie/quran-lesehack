@@ -1,0 +1,27 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Unterste Münze -->
+  <ellipse cx="32" cy="48" rx="24" ry="10" fill="#D4AF37" />
+  <ellipse cx="32" cy="48" rx="20" ry="8" fill="#F1C40F" />
+  <ellipse cx="32" cy="48" rx="16" ry="6" fill="#FFD700" />
+  
+  <!-- Mittlere Münze -->
+  <ellipse cx="32" cy="38" rx="24" ry="10" fill="#D4AF37" />
+  <ellipse cx="32" cy="38" rx="20" ry="8" fill="#F1C40F" />
+  <ellipse cx="32" cy="38" rx="16" ry="6" fill="#FFD700" />
+  
+  <!-- Obere Münze -->
+  <ellipse cx="32" cy="28" rx="24" ry="10" fill="#D4AF37" />
+  <ellipse cx="32" cy="28" rx="20" ry="8" fill="#F1C40F" />
+  <ellipse cx="32" cy="28" rx="16" ry="6" fill="#FFD700" />
+  
+  <!-- Oberste Münze -->
+  <ellipse cx="32" cy="18" rx="24" ry="10" fill="#D4AF37" />
+  <ellipse cx="32" cy="18" rx="20" ry="8" fill="#F1C40F" />
+  <ellipse cx="32" cy="18" rx="16" ry="6" fill="#FFD700" />
+  
+  <!-- Glanzeffekte -->
+  <ellipse cx="26" cy="16" rx="4" ry="2" fill="#FFFFFF" opacity="0.6" />
+  <ellipse cx="26" cy="26" rx="4" ry="2" fill="#FFFFFF" opacity="0.6" />
+  <ellipse cx="26" cy="36" rx="4" ry="2" fill="#FFFFFF" opacity="0.6" />
+  <ellipse cx="26" cy="46" rx="4" ry="2" fill="#FFFFFF" opacity="0.6" />
+</svg> 

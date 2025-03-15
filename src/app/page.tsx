@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { Play, Volume2, Maximize2, MoreVertical } from 'lucide-react';
 import { UserProgressWidget } from '@/components/user-progress-widget';
+import { ProfileSidebar } from '@/components/profile-sidebar';
 
 export default function Home() {
   return (
@@ -89,34 +90,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Profil-Seitenleiste */}
-      <div className='w-full md:w-64 p-6 flex flex-col items-center'>
-        <div className='mb-4'>
-          <Image
-            src='/avatar.svg'
-            alt='Profil'
-            width={80}
-            height={80}
-            className='rounded-full border-4 border-gray-200'
-          />
-        </div>
-        <h2 className='text-xl font-bold mb-6'>Bilgekaaan xxx</h2>
-
-        <div className='w-full border border-gray-200 rounded-lg p-4 mb-4'>
-          <div className='text-gray-500 mb-2'>Aktueller Kurs</div>
-          <div className='font-bold'>Quran LeseHack</div>
-        </div>
-
-        <div className='w-full border border-gray-200 rounded-lg p-4 mb-4'>
-          <div className='text-gray-500 mb-2'>Mitglied seit</div>
-          <div className='font-bold'>März 2023</div>
-        </div>
-
-        <div className='w-full border border-gray-200 rounded-lg p-4'>
-          <div className='text-gray-500 mb-2'>Gesamtpunkte</div>
-          <div className='font-bold'>1250</div>
-        </div>
-      </div>
+      <ProfileSidebar />
     </div>
   );
 }
