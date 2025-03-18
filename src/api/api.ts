@@ -63,7 +63,36 @@ async function invokeFunc(
 export async function signUp(dto: SignUpDto) {
   try {
     // Verwende die Supabase-Funktion für die Registrierung
-    return await invokeFunc('auth_register', dto);
+    console.log('Registriere neuen Benutzer:', dto);
+
+    // Bei der Registrierung gibt es noch keine Sitzung, daher direkter Aufruf
+    // ohne Prüfung auf eine aktive Sitzung
+    const { data, error } = await supabase.functions.invoke('auth_register', {
+      body: dto,
+    });
+
+    if (error) {
+      console.error('Function returned an error', error);
+
+      // Versuche detaillierte Fehlerinformationen zu erhalten
+      if (error instanceof FunctionsHttpError) {
+        try {
+          const errorJson = await error.context.json();
+          console.error('Detailed error:', errorJson);
+
+          // Wenn die Fehlermeldung ein message-Feld enthält, verwende es
+          if (errorJson && errorJson.message) {
+            throw new Error(errorJson.message);
+          }
+        } catch (jsonError) {
+          console.error('Error parsing error response:', jsonError);
+        }
+      }
+
+      throw error;
+    }
+
+    return data.data;
   } catch (error) {
     console.error('Sign up error:', error);
     throw error;
@@ -160,6 +189,18 @@ export async function getUserProfileData(
   id?: string
 ): Promise<UserProfileData> {
   return await invokeFunc('user_profile_get', id ? { user_id: id } : {});
+}
+
+export async function getUserProgress() {
+  return await invokeFunc('user_progress_get');
+}
+
+export async function getUserWeeklyProgress() {
+  return await invokeFunc('user_weekly_progress_get', {});
+}
+
+export async function getUserCurrentLesson() {
+  return await invokeFunc('user_current_lesson_get', {});
 }
 
 export async function updateClientProfileData(profileData: {

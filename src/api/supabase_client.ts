@@ -13,7 +13,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Erstelle den Supabase-Client mit dem korrekten Schema
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  db: { schema: 'da_qsk_reading' },
+  db: { schema: 'public' },
   auth: {
     autoRefreshToken: true,
     persistSession: true,

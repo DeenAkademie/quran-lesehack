@@ -21,7 +21,7 @@ export function UserProgressWidget() {
     <Card className='w-full shadow-md border-0'>
       <CardHeader className='pb-2 border-b'>
         <CardTitle className='text-xl font-semibold'>
-          Dein Fortschritt
+          Deine letzte Übung
         </CardTitle>
       </CardHeader>
       <CardContent className='p-6'>

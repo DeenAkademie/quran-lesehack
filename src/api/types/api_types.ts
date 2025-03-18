@@ -1,25 +1,57 @@
-export interface SignUpDto {
+export interface ChildData {
   first_name: string;
   last_name: string;
-  email: string;
-  // password: string;
+  email?: string;
   gender: string;
-  plan: string;
-  age: number;
 }
 
-export type UserProfileData = {
-  client_id: string;
+export interface SignUpDto {
   email: string;
-  badges: Badge[];
-  user_name: string;
+  password: string;
   first_name: string;
   last_name: string;
+  user_name: string;
   gender: string;
-  age: string;
-  is_active: string;
-  avatar: string;
-};
+  plan: string;
+  lang_code?: string;
+  role: string; // "admin" | "student" | "teacher" | "parent" | "child"
+  children?: ChildData[];
+  age?: number;
+}
+
+export interface UserProfileData {
+  id: string;
+  user_name: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  current_course?: string;
+  member_since?: string;
+  hasanat_count: number;
+  hasanat_today: number;
+}
+
+export interface UserProgress {
+  lessonNo: number;
+  exerciseNo: number;
+  exercisePassedCount: number;
+  hasanatCounter: number;
+  totalExercises: number;
+}
+
+export interface WeeklyProgress {
+  completed_exercises: number;
+  earned_hasanat: number;
+  progress_percentage: number;
+}
+
+export interface CurrentLessonData {
+  lesson_number: number;
+  lesson_title: string;
+  video_url: string;
+  video_thumbnail: string;
+  video_duration: string;
+}
 
 export type UserLessonState = {
   exercise_no: number;
