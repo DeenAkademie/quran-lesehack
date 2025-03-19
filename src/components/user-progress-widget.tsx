@@ -1,25 +1,24 @@
 'use client';
 
-import { useUserProgress } from '@/hooks/use-user-progress';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useProgressQuery } from '@/api/queries/use-progress-query';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function UserProgressWidget() {
-  const { progress, isLoading } = useUserProgress();
+  const { data: progress, isLoading } = useProgressQuery();
 
-  if (isLoading) {
-    return <div className='p-4 text-center'>Lade Fortschritt...</div>;
+  // Lade-Zustand anzeigen
+  if (isLoading || !progress) {
+    return <ProgressWidgetSkeleton />;
   }
 
-  // Sicherstellen, dass progress und seine Eigenschaften gültig sind
-  const exercisePassedCount = progress?.exercisePassedCount ?? 0;
-  const totalExercises = progress?.totalExercises ?? 28;
-
   // Berechne den Fortschritt in Prozent
-  const progressPercent = (exercisePassedCount / totalExercises) * 100;
+  const progressPercent =
+    (progress.exercisePassedCount / progress.totalExercises) * 100;
 
   return (
     <Card className='w-full shadow-md border-0'>
@@ -32,19 +31,19 @@ export function UserProgressWidget() {
         <div className='grid grid-cols-3 gap-6 mb-6'>
           <div className='bg-slate-50 rounded-xl p-4 text-center shadow-sm'>
             <p className='text-3xl font-bold text-primary'>
-              {progress?.lessonNo ?? 1}
+              {progress.lessonNo}
             </p>
             <p className='text-sm text-slate-600 mt-1'>Aktuelle Lektion</p>
           </div>
           <div className='bg-slate-50 rounded-xl p-4 text-center shadow-sm'>
             <p className='text-3xl font-bold text-primary'>
-              {progress?.exerciseNo ?? 1}
+              {progress.exerciseNo}
             </p>
             <p className='text-sm text-slate-600 mt-1'>Aktuelle Übung</p>
           </div>
           <div className='bg-slate-50 rounded-xl p-4 text-center shadow-sm'>
             <p className='text-3xl font-bold text-primary'>
-              {exercisePassedCount}
+              {progress.exercisePassedCount}
             </p>
             <p className='text-sm text-slate-600 mt-1'>Abgeschlossen</p>
           </div>
@@ -75,7 +74,7 @@ export function UserProgressWidget() {
               />
             </div>
             <span className='font-medium text-slate-800'>
-              {progress?.hasanatCounter ?? 0} Hasanat
+              {progress.hasanatCounter} Hasanat
             </span>
           </div>
           <Button
@@ -84,6 +83,44 @@ export function UserProgressWidget() {
           >
             <Link href='/lektionen'>Weiter lernen</Link>
           </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Skeleton-Komponente für den Ladezustand
+function ProgressWidgetSkeleton() {
+  return (
+    <Card className='w-full shadow-md border-0'>
+      <CardHeader className='pb-2 border-b'>
+        <Skeleton className='h-6 w-48' />
+      </CardHeader>
+      <CardContent className='p-6'>
+        <div className='grid grid-cols-3 gap-6 mb-6'>
+          {[1, 2, 3].map((index) => (
+            <div
+              key={index}
+              className='bg-slate-50 rounded-xl p-4 text-center shadow-sm'
+            >
+              <Skeleton className='h-8 w-16 mx-auto mb-2' />
+              <Skeleton className='h-4 w-24 mx-auto' />
+            </div>
+          ))}
+        </div>
+        <div className='space-y-2 mb-6'>
+          <div className='flex justify-between'>
+            <Skeleton className='h-4 w-28' />
+            <Skeleton className='h-4 w-12' />
+          </div>
+          <Skeleton className='h-3 w-full' />
+        </div>
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center gap-2'>
+            <Skeleton className='h-9 w-9 rounded-full' />
+            <Skeleton className='h-5 w-32' />
+          </div>
+          <Skeleton className='h-9 w-32 rounded-full' />
         </div>
       </CardContent>
     </Card>
