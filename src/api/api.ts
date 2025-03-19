@@ -204,7 +204,37 @@ export async function getUserProfileData(
 }
 
 export async function getUserProgress() {
-  return await invokeFunc('user_progress_get');
+  try {
+    const result = await invokeFunc('user_progress_get');
+
+    // Stellen Sie sicher, dass wir ein gültiges Ergebnis haben
+    if (!result || !result.data) {
+      console.warn('Kein gültiges Ergebnis von user_progress_get erhalten');
+      return {
+        data: {
+          lessonNo: 1,
+          exerciseNo: 1,
+          exercisePassedCount: 0,
+          hasanatCounter: 0,
+          totalExercises: 28,
+        },
+      };
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Fehler beim Abrufen des Benutzerfortschritts:', error);
+    // Rückgabe eines Standardobjekts im Fehlerfall
+    return {
+      data: {
+        lessonNo: 1,
+        exerciseNo: 1,
+        exercisePassedCount: 0,
+        hasanatCounter: 0,
+        totalExercises: 28,
+      },
+    };
+  }
 }
 
 export async function getUserWeeklyProgress() {

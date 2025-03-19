@@ -27,7 +27,19 @@ export function useUserProgress() {
       try {
         setIsLoading(true);
         const response = await getUserProgress();
-        setProgress(response.data);
+
+        // Sicherstellen, dass die Antwort und response.data gültig sind
+        if (response && response.data) {
+          setProgress({
+            lessonNo: response.data.lessonNo ?? 1,
+            exerciseNo: response.data.exerciseNo ?? 1,
+            exercisePassedCount: response.data.exercisePassedCount ?? 0,
+            hasanatCounter: response.data.hasanatCounter ?? 0,
+            totalExercises: response.data.totalExercises ?? 28,
+          });
+        } else {
+          console.warn('Ungültige Antwort vom Server:', response);
+        }
       } catch (err) {
         console.error('Fehler beim Laden des Fortschritts:', err);
         setError(err instanceof Error ? err : new Error('Unbekannter Fehler'));

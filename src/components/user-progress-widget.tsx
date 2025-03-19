@@ -14,8 +14,12 @@ export function UserProgressWidget() {
     return <div className='p-4 text-center'>Lade Fortschritt...</div>;
   }
 
+  // Sicherstellen, dass progress und seine Eigenschaften gültig sind
+  const exercisePassedCount = progress?.exercisePassedCount ?? 0;
+  const totalExercises = progress?.totalExercises ?? 28;
+
   // Berechne den Fortschritt in Prozent
-  const progressPercent = (progress.exercisePassedCount / 28) * 100;
+  const progressPercent = (exercisePassedCount / totalExercises) * 100;
 
   return (
     <Card className='w-full shadow-md border-0'>
@@ -28,19 +32,19 @@ export function UserProgressWidget() {
         <div className='grid grid-cols-3 gap-6 mb-6'>
           <div className='bg-slate-50 rounded-xl p-4 text-center shadow-sm'>
             <p className='text-3xl font-bold text-primary'>
-              {progress.lessonNo}
+              {progress?.lessonNo ?? 1}
             </p>
             <p className='text-sm text-slate-600 mt-1'>Aktuelle Lektion</p>
           </div>
           <div className='bg-slate-50 rounded-xl p-4 text-center shadow-sm'>
             <p className='text-3xl font-bold text-primary'>
-              {progress.exerciseNo}
+              {progress?.exerciseNo ?? 1}
             </p>
             <p className='text-sm text-slate-600 mt-1'>Aktuelle Übung</p>
           </div>
           <div className='bg-slate-50 rounded-xl p-4 text-center shadow-sm'>
             <p className='text-3xl font-bold text-primary'>
-              {progress.exercisePassedCount}
+              {exercisePassedCount}
             </p>
             <p className='text-sm text-slate-600 mt-1'>Abgeschlossen</p>
           </div>
@@ -71,7 +75,7 @@ export function UserProgressWidget() {
               />
             </div>
             <span className='font-medium text-slate-800'>
-              {progress.hasanatCounter} Hasanat
+              {progress?.hasanatCounter ?? 0} Hasanat
             </span>
           </div>
           <Button
