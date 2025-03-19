@@ -1,15 +1,6 @@
-'use client';
-
 import Link from 'next/link';
-import { useEffect } from 'react';
 
 export default function NotFound() {
-  // Using a client component ensures this only runs in the browser
-  // and not during static site generation
-  useEffect(() => {
-    console.log('Not found page rendered in the browser');
-  }, []);
-
   return (
     <div className='flex flex-col items-center justify-center min-h-[70vh] px-4'>
       <h2 className='text-3xl font-bold mb-4'>404 - Seite nicht gefunden</h2>

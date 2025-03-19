@@ -69,12 +69,6 @@ async function invokeFunc(
  */
 export async function signUp(dto: SignUpDto) {
   try {
-    // Don't attempt to make API calls during server-side rendering/building
-    if (typeof window === 'undefined') {
-      console.log('Skipping API call during SSR/SSG');
-      return null;
-    }
-
     // Verwende die Supabase-Funktion für die Registrierung
     console.log('Registriere neuen Benutzer:', dto);
 
@@ -259,12 +253,6 @@ export async function searchUsers(userName: string) {
 }
 
 export async function adminGetAllUsers() {
-  // Don't attempt to make API calls during server-side rendering/building
-  if (typeof window === 'undefined') {
-    console.log('Skipping API call during SSR/SSG');
-    return null;
-  }
-
   return await invokeFunc('admin_get_users', { page: 1, page_size: 10 });
 }
 
@@ -273,12 +261,6 @@ export async function adminSetUserLessonState(
   lessonNo: number,
   exerciseNo: number
 ) {
-  // Don't attempt to make API calls during server-side rendering/building
-  if (typeof window === 'undefined') {
-    console.log('Skipping API call during SSR/SSG');
-    return null;
-  }
-
   return await invokeFunc('admin_lesson_state_update', {
     client_id: clientId,
     lesson_no: lessonNo,

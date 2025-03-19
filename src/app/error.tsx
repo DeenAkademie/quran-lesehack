@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
 import Link from 'next/link';
+import { useEffect } from 'react';
 
 export default function Error({
   error,
@@ -11,11 +11,8 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Don't log the error during build or SSR
-    if (typeof window !== 'undefined') {
-      // Log the error to an error reporting service
-      console.error('Unhandled error:', error);
-    }
+    // Log the error to an error reporting service
+    console.error('Unhandled error:', error);
   }, [error]);
 
   return (
