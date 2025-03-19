@@ -11,8 +11,11 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log the error to an error reporting service
-    console.error('Unhandled error:', error);
+    // Don't log the error during build or SSR
+    if (typeof window !== 'undefined') {
+      // Log the error to an error reporting service
+      console.error('Unhandled error:', error);
+    }
   }, [error]);
 
   return (

@@ -1,10 +1,5 @@
 import { ApiReadingExerciseAnswer } from '@/models/api_responses';
-import {
-  FunctionInvokeOptions,
-  FunctionsFetchError,
-  FunctionsHttpError,
-  FunctionsRelayError,
-} from '@supabase/supabase-js';
+import { FunctionInvokeOptions } from '@supabase/supabase-js';
 import { supabase } from './supabase_client';
 import {
   SignUpDto,
@@ -19,6 +14,12 @@ async function invokeFunc(
   functionName: string,
   body?: FunctionInvokeOptions['body']
 ) {
+  // Don't attempt to make API calls during server-side rendering/building
+  if (typeof window === 'undefined') {
+    console.log('Skipping API call during SSR/SSG');
+    return null;
+  }
+
   try {
     const { session } = (await supabase.auth.getSession()).data;
 
@@ -33,22 +34,28 @@ async function invokeFunc(
       body,
     });
 
-    if (error instanceof FunctionsHttpError) {
-      const errorMessage = await error.context.json();
-      console.log('Function returned an error', errorMessage);
-      throw error;
-    } else if (error instanceof FunctionsRelayError) {
-      console.log('Relay error:', error.message);
-      throw error;
-    } else if (error instanceof FunctionsFetchError) {
-      console.log('Fetch error:', error.message);
-      throw error;
-    } else if (error) {
-      console.log('Unknown error:', error);
+    // Safer error handling that won't break during build
+    if (error) {
+      console.error(`Error invoking function ${functionName}:`, error);
+
+      // Check error types in a safer way
+      if (
+        error.name === 'FunctionsHttpError' &&
+        error.context &&
+        typeof error.context.json === 'function'
+      ) {
+        try {
+          const errorMessage = await error.context.json();
+          console.log('Function returned an error', errorMessage);
+        } catch (jsonError) {
+          console.error('Error parsing error response:', jsonError);
+        }
+      }
+
       throw error;
     }
 
-    return data.data;
+    return data?.data || null;
   } catch (error) {
     console.error(`Error invoking function ${functionName}:`, error);
     throw error;
@@ -62,6 +69,12 @@ async function invokeFunc(
  */
 export async function signUp(dto: SignUpDto) {
   try {
+    // Don't attempt to make API calls during server-side rendering/building
+    if (typeof window === 'undefined') {
+      console.log('Skipping API call during SSR/SSG');
+      return null;
+    }
+
     // Verwende die Supabase-Funktion für die Registrierung
     console.log('Registriere neuen Benutzer:', dto);
 
@@ -75,7 +88,11 @@ export async function signUp(dto: SignUpDto) {
       console.error('Function returned an error', error);
 
       // Versuche detaillierte Fehlerinformationen zu erhalten
-      if (error instanceof FunctionsHttpError) {
+      if (
+        error.name === 'FunctionsHttpError' &&
+        error.context &&
+        typeof error.context.json === 'function'
+      ) {
         try {
           const errorJson = await error.context.json();
           console.error('Detailed error:', errorJson);
@@ -92,7 +109,7 @@ export async function signUp(dto: SignUpDto) {
       throw error;
     }
 
-    return data.data;
+    return data?.data || null;
   } catch (error) {
     console.error('Sign up error:', error);
     throw error;
@@ -242,6 +259,12 @@ export async function searchUsers(userName: string) {
 }
 
 export async function adminGetAllUsers() {
+  // Don't attempt to make API calls during server-side rendering/building
+  if (typeof window === 'undefined') {
+    console.log('Skipping API call during SSR/SSG');
+    return null;
+  }
+
   return await invokeFunc('admin_get_users', { page: 1, page_size: 10 });
 }
 
@@ -250,6 +273,12 @@ export async function adminSetUserLessonState(
   lessonNo: number,
   exerciseNo: number
 ) {
+  // Don't attempt to make API calls during server-side rendering/building
+  if (typeof window === 'undefined') {
+    console.log('Skipping API call during SSR/SSG');
+    return null;
+  }
+
   return await invokeFunc('admin_lesson_state_update', {
     client_id: clientId,
     lesson_no: lessonNo,
