@@ -30,6 +30,7 @@ async function invokeFunc(
     const { data, error } = await supabase.functions.invoke(functionName, {
       headers: {
         'refresh-token': session.refresh_token,
+        Authorization: `Bearer ${session.access_token}`,
       },
       body,
     });
