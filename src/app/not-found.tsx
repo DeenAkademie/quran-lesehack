@@ -1,20 +1,40 @@
-import Link from 'next/link';
-
 export default function NotFound() {
   return (
-    <div className='flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50'>
-      <div className='text-center'>
-        <h1 className='text-6xl font-bold text-primary mb-2'>404</h1>
-        <h2 className='text-2xl font-semibold mb-6'>Seite nicht gefunden</h2>
-        <p className='text-gray-600 mb-8 max-w-md mx-auto'>
-          Die von Ihnen gesuchte Seite existiert nicht oder wurde verschoben.
-        </p>
-        <Link
-          href='/'
-          className='inline-block px-6 py-3 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors'
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        padding: '1rem',
+        backgroundColor: '#f9fafb',
+      }}
+    >
+      <div
+        style={{
+          textAlign: 'center',
+        }}
+      >
+        <h1
+          style={{
+            fontSize: '4rem',
+            fontWeight: 'bold',
+            color: '#2563eb',
+            marginBottom: '0.5rem',
+          }}
         >
-          Zurück zur Startseite
-        </Link>
+          404
+        </h1>
+        <h2
+          style={{
+            fontSize: '1.5rem',
+            fontWeight: '600',
+            marginBottom: '1.5rem',
+          }}
+        >
+          Seite nicht gefunden
+        </h2>
       </div>
     </div>
   );
