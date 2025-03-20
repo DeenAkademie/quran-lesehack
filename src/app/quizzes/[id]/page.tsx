@@ -6,6 +6,6 @@ interface PageProps {
   };
 }
 
-export default async function Page({ params }: PageProps) {
+export default function Page({ params }: PageProps) {
   return <QuizExercise lessonId={parseInt(params.id)} />;
 }
