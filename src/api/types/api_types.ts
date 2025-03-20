@@ -118,4 +118,15 @@ export type ExerciseResult = {
   points: number;
   time_ms: number;
   achievedBadge?: Badge;
+  answers?: ReadingExerciseAnswer[];
+  rankings?: RankingEntry[];
+  totalQuestions?: number;
+};
+
+export type RankingEntry = {
+  rank: number;
+  user_name: string;
+  points: number;
+  score: number;
+  time: string;
 };

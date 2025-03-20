@@ -12,6 +12,7 @@ import {
   Info,
   Menu,
   LogIn,
+  GraduationCap,
 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 
@@ -33,6 +34,11 @@ export function MainNav({ className }: MainNavProps) {
       icon: <BookOpen className='h-5 w-5' />,
     },
     { href: '/videos', label: 'Videos', icon: <Video className='h-5 w-5' /> },
+    {
+      href: '/qsk-light',
+      label: 'QSK-Light',
+      icon: <GraduationCap className='h-5 w-5' />,
+    },
     {
       href: '/quizzes',
       label: 'Übungen',

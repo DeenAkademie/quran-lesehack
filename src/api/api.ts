@@ -206,11 +206,43 @@ export async function getUserProfileData(
 export async function getUserProgress() {
   try {
     const result = await invokeFunc('user_progress_get');
+    console.log('API result:', JSON.stringify(result));
 
-    // Stellen Sie sicher, dass wir ein gültiges Ergebnis haben
-    if (!result || !result.data) {
-      console.warn('Kein gültiges Ergebnis von user_progress_get erhalten');
+    // Ausführlichere Prüfung des Ergebnisses
+    if (!result) {
+      console.warn('Kein Ergebnis von user_progress_get erhalten');
+      return generateDefaultProgress();
+    }
+
+    // Prüfen, ob es sich um ein direktes Datenobjekt handelt (wie vom Network Tab gesehen)
+    if (
+      result.hasanatCounter !== undefined ||
+      result.hasanat_counter !== undefined
+    ) {
+      console.log('Direktes Datenobjekt vom Server erhalten');
       return {
+        status: 'success',
+        data: {
+          lessonNo: result.lessonNo || result.lesson_no || 1,
+          exerciseNo: result.exerciseNo || result.exercise_no || 1,
+          exercisePassedCount:
+            result.exercisePassedCount || result.exercise_passed_count || 0,
+          hasanatCounter: result.hasanatCounter || result.hasanat_counter || 0,
+          totalExercises: result.totalExercises || result.total_exercises || 28,
+        },
+      };
+    }
+
+    // Prüfen, ob der Status Erfolg ist
+    if (result.status === 'success' && result.data) {
+      return result;
+    }
+
+    // Wenn data fehlt, aber status Erfolg ist
+    if (result.status === 'success' && !result.data) {
+      console.warn('Status ist Erfolg, aber keine Daten vorhanden');
+      return {
+        status: 'success',
         data: {
           lessonNo: 1,
           exerciseNo: 1,
@@ -221,20 +253,27 @@ export async function getUserProgress() {
       };
     }
 
-    return result;
+    // Bei allen anderen Fällen
+    console.warn('Ungültiges Ergebnis von user_progress_get erhalten:', result);
+    return generateDefaultProgress();
   } catch (error) {
     console.error('Fehler beim Abrufen des Benutzerfortschritts:', error);
-    // Rückgabe eines Standardobjekts im Fehlerfall
-    return {
-      data: {
-        lessonNo: 1,
-        exerciseNo: 1,
-        exercisePassedCount: 0,
-        hasanatCounter: 0,
-        totalExercises: 28,
-      },
-    };
+    return generateDefaultProgress();
   }
+}
+
+// Hilfsfunktion für den Standardwert
+function generateDefaultProgress() {
+  return {
+    status: 'error',
+    data: {
+      lessonNo: 1,
+      exerciseNo: 1,
+      exercisePassedCount: 0,
+      hasanatCounter: 0,
+      totalExercises: 28,
+    },
+  };
 }
 
 export async function getUserWeeklyProgress() {

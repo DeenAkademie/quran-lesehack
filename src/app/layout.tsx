@@ -4,7 +4,7 @@ import "./globals.css";
 import { MainNav } from '@/components/main-nav';
 import { AuthProvider } from '@/context/auth-context';
 import { QueryProvider } from '@/providers/query-provider';
-import { ToastProvider } from '@/components/providers/toast-provider';
+import { ToastProvider } from '@/components/ui/use-toast';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -100,13 +100,14 @@ export default function RootLayout({
       >
         <QueryProvider>
           <AuthProvider>
-            <MainNav />
-            <main className='flex-1 bg-white'>
-              <div className='max-w-[1200px] mx-auto'>{children}</div>
-            </main>
-            <div id='lightbox-container' className='hidden'></div>
-            <audio id='mp3-player' className='hidden'></audio>
-            <ToastProvider />
+            <ToastProvider>
+              <MainNav />
+              <main className='flex-1 bg-white'>
+                <div className='max-w-[1200px] mx-auto'>{children}</div>
+              </main>
+              <div id='lightbox-container' className='hidden'></div>
+              <audio id='mp3-player' className='hidden'></audio>
+            </ToastProvider>
           </AuthProvider>
         </QueryProvider>
       </body>

@@ -1,145 +1,149 @@
-import Image from 'next/image';
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Play, Volume2, Maximize2, MoreVertical } from 'lucide-react';
+import { VideoPlayer } from '@/components/video-player';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/api/supabase_client';
 
-// Next.js 15 Page Component
-export default function Page(props) {
-  const lessonId = parseInt(props.params.id);
+// Typ-Definitionen für die API-Antwort
+interface VideoResponse {
+  lesson_no: number;
+  week_no: number;
+  part: number;
+  vimeo_id: string;
+  vimeo_hash: string;
+  title: string;
+  description: string;
+  is_children: boolean;
+  lang_code: string;
+  video_urls: {
+    id: number;
+    created_at: string;
+    video_id: number;
+    urls: {
+      [key: string]: string;
+    };
+  };
+}
 
-  const lessons = [
-    {
-      id: 1,
-      title: 'ا',
-      arabic: 'Alif',
-      description: 'The first letter of the Arabic alphabet',
+// Funktion zum Abrufen von Videodaten
+async function getLessonVideoData(
+  lessonNo: number = 1
+): Promise<VideoResponse | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke(
+      'lesson_get_videos',
+      {
+        body: {
+          lesson_no: lessonNo,
+          is_children: false,
+          lang_code: 'de',
+        },
+      }
+    );
+
+    if (error) {
+      console.error('Fehler beim Abrufen der Videos:', error);
+      return null;
+    }
+
+    // Da wir nach einer bestimmten Lektion suchen, nehmen wir das erste Ergebnis
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0];
+    }
+
+    return null;
+  } catch (e) {
+    console.error('Exception beim Abrufen der Videos:', e);
+    return null;
+  }
+}
+
+export default function VideoDetailPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const lessonId = parseInt(params.id);
+
+  // Lade die Videodaten für die aktuelle Lektion
+  const { data: video } = useQuery({
+    queryKey: ['lessonVideo', lessonId],
+    queryFn: async () => {
+      try {
+        return await getLessonVideoData(lessonId);
+      } catch (error) {
+        console.error('Fehler beim Laden des Videos:', error);
+        return null;
+      }
     },
-    {
-      id: 2,
-      title: 'ب',
-      arabic: 'Ba',
-      description: 'The second letter of the Arabic alphabet',
-    },
-    // Add more lessons as needed
-  ];
+  });
 
-  const lesson = lessons.find((l) => l.id === lessonId) || lessons[0];
+  // Fallback-Daten, falls keine Videodaten geladen wurden
+  const fallbackLesson = {
+    id: lessonId,
+    title: getLessonCharacter(lessonId),
+    arabic: getArabicName(lessonId),
+    description: `Lektion ${lessonId}`,
+    vimeoId: '',
+  };
+
+  // Die Lektion, die angezeigt wird (entweder die geladenen Daten oder der Fallback)
+  const lesson = video
+    ? {
+        id: video.lesson_no,
+        title: video.title || getLessonCharacter(video.lesson_no),
+        arabic: getArabicName(video.lesson_no),
+        description: video.description || `Lektion ${video.lesson_no}`,
+        vimeoId: video.vimeo_id,
+      }
+    : fallbackLesson;
 
   return (
     <div className='p-6'>
       <div className='flex items-center mb-6'>
         <Link href='/videos' className='text-[#4AA4DE] hover:underline mr-2'>
-          &larr; Back to lessons
+          &larr; Zurück zu den Lektionen
         </Link>
       </div>
 
       <h1 className='text-2xl font-bold mb-1'>
-        Lesson {lesson.id}: {lesson.title} ({lesson.arabic})
+        Lektion {lesson.id}: {lesson.title} ({lesson.arabic})
       </h1>
       <p className='text-gray-500 mb-6'>{lesson.description}</p>
 
-      <div className='bg-black mb-6 rounded-lg overflow-hidden'>
-        <div className='relative'>
-          <Image
-            src='/img/lesson-video.jpg'
-            alt={`Lesson ${lesson.id} Video`}
-            width={640}
-            height={360}
-            className='w-full'
-          />
-          <div className='absolute inset-0 flex items-center justify-center'>
-            <button className='bg-white/20 rounded-full p-3'>
-              <Play className='h-6 w-6 text-white' fill='white' />
-            </button>
-          </div>
-          <div className='absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 flex justify-between items-center'>
-            <div className='flex items-center'>
-              <span>0:00 / 9:42</span>
-            </div>
-            <div className='flex items-center gap-4'>
-              <Volume2 className='h-5 w-5' />
-              <Maximize2 className='h-5 w-5' />
-              <MoreVertical className='h-5 w-5' />
-            </div>
-          </div>
+      {/* Video-Player */}
+      {lesson.vimeoId ? (
+        <VideoPlayer vimeoId={lesson.vimeoId} className='mb-6' />
+      ) : (
+        <div className='bg-black mb-6 rounded-lg overflow-hidden aspect-video flex items-center justify-center'>
+          <p className='text-white'>Video nicht verfügbar</p>
         </div>
-      </div>
+      )}
 
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-6'>
-        <div className='border border-gray-200 rounded-lg p-4'>
-          <h2 className='text-lg font-medium mb-4'>Letter Information</h2>
-          <div className='space-y-4'>
-            <div>
-              <h3 className='font-medium text-gray-500'>Arabic Form</h3>
-              <p className='text-4xl'>{lesson.title}</p>
-            </div>
-            <div>
-              <h3 className='font-medium text-gray-500'>Transliteration</h3>
-              <p>{lesson.arabic}</p>
-            </div>
-            <div>
-              <h3 className='font-medium text-gray-500'>Pronunciation</h3>
-              <div className='flex items-center'>
-                <p>Listen to the pronunciation</p>
-                <button className='ml-2 bg-[#4AA4DE] text-white p-1 rounded-full'>
-                  <svg
-                    width='16'
-                    height='16'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    xmlns='http://www.w3.org/2000/svg'
-                  >
-                    <path d='M11 5L6 9H2V15H6L11 19V5Z' fill='currentColor' />
-                    <path
-                      d='M15.54 8.46C16.4774 9.39764 17.0039 10.6692 17.0039 11.995C17.0039 13.3208 16.4774 14.5924 15.54 15.53'
-                      stroke='currentColor'
-                      strokeWidth='2'
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                    />
-                    <path
-                      d='M19.07 5.93C20.9447 7.80528 21.9979 10.3447 21.9979 13C21.9979 15.6553 20.9447 18.1947 19.07 20.07'
-                      stroke='currentColor'
-                      strokeWidth='2'
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className='border border-gray-200 rounded-lg p-4'>
-          <h2 className='text-lg font-medium mb-4'>Practice</h2>
-          <div className='space-y-4'>
-            <Button className='w-full bg-[#4AA4DE] hover:bg-[#3993CD]'>
-              Recognition Exercise
-            </Button>
-            <Button className='w-full bg-[#4AA4DE] hover:bg-[#3993CD]'>
-              Writing Exercise
-            </Button>
-            <Button className='w-full bg-[#4AA4DE] hover:bg-[#3993CD]'>
-              Quiz
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className='flex justify-between'>
-        {lessonId > 1 && (
-          <Button asChild variant='outline' className='flex items-center'>
-            <Link href={`/videos/${lessonId - 1}`}>&larr; Previous Lesson</Link>
-          </Button>
-        )}
-        <div className='flex-1'></div>
-        {lessonId < lessons.length && (
-          <Button asChild className='bg-[#4AA4DE] hover:bg-[#3993CD]'>
-            <Link href={`/videos/${lessonId + 1}`}>Next Lesson &rarr;</Link>
-          </Button>
-        )}
+      <div className='flex justify-center mb-6'>
+        <Button
+          asChild
+          className='bg-[#4AA4DE] hover:bg-[#3993CD] text-white px-6'
+        >
+          <Link href={`/quizzes/${lessonId}`}>Zu den Übungen</Link>
+        </Button>
       </div>
     </div>
   );
+}
+
+// Hilfsfunktion, um den Buchstaben für eine Lektion zu ermitteln
+function getLessonCharacter(lessonNo: number): string {
+  const characters = ['ا', 'ب', 'ت', 'ث', 'ج', 'ح'];
+  return lessonNo > 0 && lessonNo <= characters.length
+    ? characters[lessonNo - 1]
+    : '';
+}
+
+// Hilfsfunktion, um den arabischen Namen für eine Lektion zu ermitteln
+function getArabicName(lessonNo: number): string {
+  const names = ['Alif', 'Ba', 'Ta', 'Tha', 'Jim', 'Ha'];
+  return lessonNo > 0 && lessonNo <= names.length ? names[lessonNo - 1] : '';
 }

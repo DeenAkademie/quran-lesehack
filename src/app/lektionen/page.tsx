@@ -6,21 +6,21 @@ export default function CoursesPage() {
   const courses = [
     {
       id: 'learn-to-read',
-      title: 'Lesen lernen',
+      title: 'Lerne zu lesen',
       image: '/img/course-book.svg',
-      active: true,
-      locked: false,
+      active: false,
+      locked: true,
     },
     {
       id: 'read-the-quran',
-      title: 'Den Quran lesen',
+      title: 'Lies den Quran',
       image: '/img/course-book.svg',
       active: false,
       locked: true,
     },
     {
       id: 'read-with-tajweed',
-      title: 'Mit Tajweed lesen',
+      title: 'Lies mit Tajweed',
       image: '/img/course-book.svg',
       active: false,
       locked: true,

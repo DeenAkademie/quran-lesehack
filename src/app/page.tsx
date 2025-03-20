@@ -1,3 +1,5 @@
+'use client';
+
 import { UserProgressWidget } from '@/components/user-progress-widget';
 import { ProfileSidebar } from '@/components/profile-sidebar';
 import { WeeklyProgress } from '@/components/weekly-progress';
