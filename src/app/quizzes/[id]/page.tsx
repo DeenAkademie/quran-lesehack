@@ -1,11 +1,14 @@
 import { QuizExercise } from './components/quiz-exercise';
+import type { Metadata } from 'next';
 
-interface PageProps {
-  params: {
-    id: string;
-  };
-}
+export const metadata: Metadata = {
+  title: 'Quiz Exercise',
+};
 
-export default function Page({ params }: PageProps) {
-  return <QuizExercise lessonId={parseInt(params.id)} />;
+export default function Page({ params }: any) {
+  return (
+    <main>
+      <QuizExercise lessonId={parseInt(params.id)} />
+    </main>
+  );
 }
