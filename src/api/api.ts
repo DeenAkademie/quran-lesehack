@@ -24,7 +24,22 @@ async function invokeFunc(
     const { session } = (await supabase.auth.getSession()).data;
 
     if (!session) {
-      throw new Error('No active session found');
+      console.warn(`No active session found for function: ${functionName}`);
+      // Return a default object that indicates no authentication
+      return {
+        status: 'error',
+        message: 'No active session',
+        data: {
+          // Default data structure that matches the expected return type
+          lessonNo: 1,
+          exerciseNo: 1,
+          exercisePassedCount: 0,
+          hasanatCounter: 0,
+          totalExercises: 28,
+          lastActiveLessonNo: 1,
+          lastActiveExerciseNo: 1,
+        },
+      };
     }
 
     const { data, error } = await supabase.functions.invoke(functionName, {

@@ -27,6 +27,15 @@ export function useLessonQuery() {
       try {
         const response = await getUserLessonState();
 
+        // Check if the response indicates no session
+        if (
+          response?.status === 'error' &&
+          response?.message === 'No active session'
+        ) {
+          console.warn('Keine aktive Sitzung für Lektionsabfrage');
+          return defaultLessonState;
+        }
+
         if (!response) {
           console.warn('Keine gültigen Lektionsdaten empfangen');
           return defaultLessonState;
@@ -46,14 +55,27 @@ export function useLessonQuery() {
             response.exercise_passed_count ??
             defaultLessonState.exercisePassedCount,
         };
-      } catch (error) {
-        console.error('Fehler beim Abrufen des Lektionszustands:', error);
+      } catch (error: any) {
+        // Handle "No active session" errors gracefully
+        if (error.message && error.message.includes('No active session')) {
+          console.warn('Keine aktive Benutzersitzung für Lektionsabfrage');
+        } else {
+          console.error('Fehler beim Abrufen des Lektionszustands:', error);
+        }
         return defaultLessonState;
       }
     },
     // Aktualisierungseinstellungen
     staleTime: 2 * 60 * 1000, // 2 Minuten
     refetchOnWindowFocus: true,
-    retry: 1,
+    // Fehlerbehandlung anpassen
+    retry: (failureCount, error: any) => {
+      // Don't retry "No active session" errors
+      if (error.message && error.message.includes('No active session')) {
+        return false;
+      }
+      // Only retry other errors once
+      return failureCount < 1;
+    },
   });
 }

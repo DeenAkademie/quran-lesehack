@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,8 @@ export default function LoginPage() {
   const [error, setError] = useState('');
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams?.get('return_to') || '/';
   const { login, isLoading } = useAuth();
 
   // Verbesserte Anmeldefunktion mit Schutz gegen mehrfache Aufrufe
@@ -33,7 +35,7 @@ export default function LoginPage() {
 
       // Kurze Verzögerung, um sicherzustellen, dass der Store aktualisiert wurde
       setTimeout(() => {
-        router.push('/');
+        router.push(returnTo);
       }, 100);
     } catch (error) {
       console.error('Login error:', error);
@@ -50,6 +52,12 @@ export default function LoginPage() {
         Bitte gib deine E-Mail-Adresse und dein Passwort ein, um dich
         anzumelden.
       </p>
+
+      {returnTo !== '/' && (
+        <div className='mb-4 p-3 bg-blue-50 text-blue-800 rounded-md text-sm'>
+          Du wirst nach dem Login zu deiner angeforderten Seite zurückgeleitet.
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className='space-y-6'>
         <div className='space-y-2'>

@@ -28,6 +28,15 @@ export function useProgressQuery() {
         const response = await getUserProgress();
         console.log('Original API response:', response);
 
+        // Check if the response indicates no session
+        if (
+          response?.status === 'error' &&
+          response?.message === 'No active session'
+        ) {
+          console.warn('Keine aktive Sitzung für Benutzerfortschritt');
+          return defaultProgressData;
+        }
+
         if (!response || !response.data) {
           console.warn('Keine gültigen Fortschrittsdaten empfangen');
           return defaultProgressData;
@@ -66,8 +75,13 @@ export function useProgressQuery() {
           console.warn('API response status is not success:', response.status);
           return defaultProgressData;
         }
-      } catch (error) {
-        console.error('Fehler beim Abrufen des Benutzerfortschritts:', error);
+      } catch (error: any) {
+        // Handle "No active session" errors gracefully
+        if (error.message && error.message.includes('No active session')) {
+          console.warn('Keine aktive Benutzersitzung für Fortschrittsabfrage');
+        } else {
+          console.error('Fehler beim Abrufen des Benutzerfortschritts:', error);
+        }
         return defaultProgressData;
       }
     },
@@ -76,6 +90,13 @@ export function useProgressQuery() {
     // Automatisch neu laden, wenn der Benutzer zum Tab zurückkehrt
     refetchOnWindowFocus: true,
     // Fehlerbehandlung
-    retry: 2,
+    retry: (failureCount, error: any) => {
+      // Don't retry "No active session" errors
+      if (error.message && error.message.includes('No active session')) {
+        return false;
+      }
+      // Only retry other errors twice
+      return failureCount < 2;
+    },
   });
 }

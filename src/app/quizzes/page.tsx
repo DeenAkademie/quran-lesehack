@@ -12,8 +12,49 @@ import { useQuery } from '@tanstack/react-query';
 
 export default function QuizzesPage() {
   // Verwende die TanStack Query Hooks
-  const { isLoading: isProgressLoading } = useProgressQuery();
-  const { data: lessonState, isLoading: isLessonLoading } = useLessonQuery();
+  const { isLoading: isProgressLoading, error: progressError } =
+    useProgressQuery();
+  const {
+    data: lessonState,
+    isLoading: isLessonLoading,
+    error: lessonError,
+  } = useLessonQuery();
+
+  // Check for session errors
+  const isSessionError =
+    (progressError &&
+      typeof progressError === 'object' &&
+      'message' in progressError &&
+      (progressError as any).message?.includes('No active session')) ||
+    (lessonError &&
+      typeof lessonError === 'object' &&
+      'message' in lessonError &&
+      (lessonError as any).message?.includes('No active session'));
+
+  // If not logged in, show a login message
+  if (isSessionError) {
+    return (
+      <div className='p-6'>
+        <h1 className='text-2xl font-bold mb-1'>Deine Übungen</h1>
+        <p className='text-gray-500 mb-6'>Trainiere dein Wissen.</p>
+
+        <div className='bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6'>
+          <div className='text-center space-y-4'>
+            <h2 className='text-xl font-semibold'>Anmeldung erforderlich</h2>
+            <p className='text-gray-600 max-w-md mx-auto'>
+              Bitte melde dich an, um auf deine Übungen zugreifen zu können.
+            </p>
+            <Button
+              asChild
+              className='bg-[#4AA4DE] hover:bg-[#3993CD] text-white px-8 mt-4'
+            >
+              <Link href='/login'>Zur Anmeldung</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Abfrage der Übungsanzahl über die API
   const { data: exerciseData, isLoading: isExerciseDataLoading } = useQuery({

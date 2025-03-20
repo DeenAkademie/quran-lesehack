@@ -25,8 +25,11 @@ export function QuizExercise({ lessonId }: QuizExerciseProps) {
   const queryClient = useQueryClient();
 
   // Prüfen, ob wir im Trainingsmodus sind (aktuelle Lektion ist kleiner als die vom Benutzer erreichte Lektion)
-  const { data: lessonState, isLoading: isLessonStateLoading } =
-    useLessonQuery();
+  const {
+    data: lessonState,
+    isLoading: isLessonStateLoading,
+    error: lessonStateError,
+  } = useLessonQuery();
   const isTrainingMode = lessonId < (lessonState?.lessonNo || 1);
 
   // State management
@@ -111,14 +114,38 @@ export function QuizExercise({ lessonId }: QuizExerciseProps) {
   const {
     data: exercise,
     isLoading: isLoadingExercise,
-    isError,
-    error,
+    isError: isExerciseError,
+    error: exerciseError,
   } = useExerciseQuery(lessonId, exerciseNo, {
     refetchOnWindowFocus: true,
     refetchInterval: 5000, // Alle 5 Sekunden Daten neu laden
   });
 
   const submission = useExerciseSubmission();
+
+  // Check for session errors
+  const isSessionError =
+    (lessonStateError &&
+      lessonStateError.message?.includes('No active session')) ||
+    (exerciseError && exerciseError.message?.includes('No active session'));
+
+  // If there's a session error, show login message instead of the quiz
+  if (isSessionError) {
+    return (
+      <div className='flex flex-col items-center justify-center p-8 space-y-6 min-h-[50vh] text-center'>
+        <h2 className='text-2xl font-bold'>Anmeldung erforderlich</h2>
+        <p className='text-gray-600 max-w-md'>
+          Bitte melde dich an, um auf die Übungen zugreifen zu können.
+        </p>
+        <Button
+          onClick={() => router.push('/login')}
+          className='bg-[#4AA4DE] hover:bg-[#3993CD] text-white'
+        >
+          Zur Anmeldung
+        </Button>
+      </div>
+    );
+  }
 
   // Einmalig die Antworten für jede Frage mischen
   useEffect(() => {
@@ -335,7 +362,7 @@ export function QuizExercise({ lessonId }: QuizExerciseProps) {
   }
 
   // Error state
-  if (isError || !exercise) {
+  if (isExerciseError || !exercise) {
     return (
       <div className='p-6'>
         <div className='flex items-center mb-6'>
@@ -348,8 +375,8 @@ export function QuizExercise({ lessonId }: QuizExerciseProps) {
             Fehler beim Laden der Übung
           </h1>
           <p className='mb-4'>
-            {error instanceof Error
-              ? error.message
+            {exerciseError instanceof Error
+              ? exerciseError.message
               : 'Die Übungsdaten konnten nicht geladen werden.'}
           </p>
           <Button onClick={() => router.push('/quizzes')} className='mr-2'>
