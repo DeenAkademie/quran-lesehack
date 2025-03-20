@@ -155,6 +155,65 @@ export function QuizExercise({ lessonId }: QuizExerciseProps) {
     }
   }, [currentQuestion, exercise, isLoadingExercise]);
 
+  // Submit all answers
+  const submitExercise = useCallback(
+    async (finalAnswers: ApiReadingExerciseAnswer[]) => {
+      if (!exercise || isLoading) return;
+
+      setIsLoading(true);
+
+      try {
+        // Sort the answers by answer_no to ensure correct order
+        const sortedAnswers = [...finalAnswers].sort(
+          (a, b) => a.answer_no - b.answer_no
+        );
+
+        // Get answer hashes from the exercise in the exact order
+        const answerHashes = exercise.answer_hashes || [];
+
+        // Ensure we have all answers before submitting
+        if (sortedAnswers.length !== exercise.questions.length) {
+          console.error(
+            'Answer count mismatch',
+            sortedAnswers.length,
+            exercise.questions.length
+          );
+
+          // Complete any missing answers
+          for (let i = 0; i < exercise.questions.length; i++) {
+            const hasAnswer = sortedAnswers.some((a) => a.answer_no === i + 1);
+            if (!hasAnswer) {
+              const q = exercise.questions[i];
+              sortedAnswers.push({
+                answer_no: i + 1,
+                text: q.text,
+                answer: '',
+                is_correct: false,
+                time_ms: 0,
+              });
+            }
+          }
+        }
+
+        // Submit the answers
+        await submission.mutateAsync({
+          lessonNo: lessonId,
+          exerciseNo,
+          answerHashes,
+          answers: sortedAnswers,
+        });
+
+        // Navigate to the results page
+        router.push('/quizzes/results');
+      } catch (error) {
+        console.error('Error submitting exercise:', error);
+        setIsLoading(false);
+        isSubmittingRef.current = false;
+      }
+    },
+    [exercise, isLoading, submission, lessonId, exerciseNo, router]
+  );
+
   // Memoize the answer selection handler to prevent recreations
   const handleAnswerSelect = useCallback(
     (answer: string) => {
@@ -214,99 +273,15 @@ export function QuizExercise({ lessonId }: QuizExerciseProps) {
         }
       }, 750);
     },
-    [currentQuestion, exercise, showFeedback, answers, isTrainingMode]
+    [
+      currentQuestion,
+      exercise,
+      showFeedback,
+      answers,
+      isTrainingMode,
+      submitExercise,
+    ]
   );
-
-  // Submit all answers
-  const submitExercise = async (finalAnswers: ApiReadingExerciseAnswer[]) => {
-    if (!exercise || isLoading) return;
-
-    setIsLoading(true);
-
-    try {
-      // Sort the answers by answer_no to ensure correct order
-      const sortedAnswers = [...finalAnswers].sort(
-        (a, b) => a.answer_no - b.answer_no
-      );
-
-      // Get answer hashes from the exercise in the exact order
-      const answerHashes = exercise.answer_hashes || [];
-
-      // Ensure we have all answers before submitting
-      if (sortedAnswers.length !== exercise.questions.length) {
-        console.error(
-          'Answer count mismatch',
-          sortedAnswers.length,
-          exercise.questions.length
-        );
-
-        // Complete any missing answers
-        for (let i = 0; i < exercise.questions.length; i++) {
-          const hasAnswer = sortedAnswers.some((a) => a.answer_no === i + 1);
-          if (!hasAnswer) {
-            const q = exercise.questions[i];
-            sortedAnswers.push({
-              answer_no: i + 1,
-              text: q.text,
-              answer: q.correct_answers[0],
-              is_correct: true,
-              time_ms: 1000,
-            });
-          }
-        }
-
-        // Re-sort after adding missing answers
-        sortedAnswers.sort((a, b) => a.answer_no - b.answer_no);
-      }
-
-      // Ensure time_ms values are within smallint range (max 32767)
-      const processedAnswers = sortedAnswers.map((answer) => ({
-        ...answer,
-        time_ms: Math.min(answer.time_ms, 32767), // Limit to smallint max value
-      }));
-
-      await submission.mutateAsync({
-        lessonNo: lessonId,
-        exerciseNo,
-        answerHashes,
-        answers: processedAnswers,
-      });
-
-      // Navigiere zur Ergebnisseite
-      router.push(`/quizzes/results?lesson=${lessonId}&exercise=${exerciseNo}`);
-    } catch (error) {
-      console.error('Fehler beim Einreichen der Übung:', error);
-      setIsLoading(false);
-      isSubmittingRef.current = false;
-    }
-  };
-
-  // // Handle finishing the exercise early (skip to results)
-  // const finishExercise = useCallback(() => {
-  //   if (!exercise || isSubmittingRef.current) return;
-
-  //   isSubmittingRef.current = true;
-
-  //   const finishedAnswers = [...answers];
-
-  //   // Add correct answers for remaining questions
-  //   for (let i = currentQuestion; i < exercise.questions.length; i++) {
-  //     const existingAnswer = finishedAnswers.find((a) => a.answer_no === i + 1);
-
-  //     if (!existingAnswer) {
-  //       const q = exercise.questions[i];
-  //       finishedAnswers.push({
-  //         answer_no: i + 1,
-  //         text: q.text,
-  //         answer: q.correct_answers[0],
-  //         is_correct: true,
-  //         time_ms: 1000,
-  //       });
-  //     }
-  //   }
-
-  //   submitExercise(finishedAnswers);
-  // }, [exercise, answers, currentQuestion]);
 
   // Pfeilfunktionen für die Navigation durch die Fragen im Trainingsmodus
   const goToPreviousQuestion = useCallback(() => {

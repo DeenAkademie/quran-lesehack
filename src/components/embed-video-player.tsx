@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from 'react';
 
-// Definiere Vimeo Player-Typen
+// Define Vimeo Player types with more specific types
 declare global {
   interface Window {
     Vimeo?: {
@@ -10,12 +10,18 @@ declare global {
         iframe: HTMLIFrameElement,
         options?: Record<string, unknown>
       ) => {
-        on: (event: string, callback: (data: any) => void) => void;
+        on: (event: string, callback: (data: VimeoEventData) => void) => void;
         play: () => Promise<void>;
         destroy: () => void;
       };
     };
   }
+}
+
+// Type for Vimeo event data
+interface VimeoEventData {
+  percent?: number;
+  [key: string]: unknown;
 }
 
 interface EmbedVideoPlayerProps {
@@ -54,10 +60,13 @@ export function EmbedVideoPlayer({
       }
     }
 
-    function initializePlayer() {
-      if (!playerRef.current) return;
+    // Store a reference to the current ref value for cleanup
+    const currentPlayerRef = playerRef.current;
 
-      const iframe = playerRef.current.querySelector('iframe');
+    function initializePlayer() {
+      if (!currentPlayerRef) return;
+
+      const iframe = currentPlayerRef.querySelector('iframe');
       if (iframe && window.Vimeo) {
         const player = new window.Vimeo.Player(iframe);
 
@@ -67,8 +76,9 @@ export function EmbedVideoPlayer({
         });
 
         // Fortschritt verfolgen
-        player.on('timeupdate', (data: { percent: number }) => {
-          if (onProgress) onProgress(Math.floor(data.percent * 100));
+        player.on('timeupdate', (data: VimeoEventData) => {
+          if (onProgress && data.percent)
+            onProgress(Math.floor(data.percent * 100));
         });
 
         // AutoPlay falls gewünscht
@@ -78,8 +88,8 @@ export function EmbedVideoPlayer({
 
     return () => {
       // Cleanup, falls nötig
-      if (playerRef.current) {
-        const iframe = playerRef.current.querySelector('iframe');
+      if (currentPlayerRef) {
+        const iframe = currentPlayerRef.querySelector('iframe');
         if (iframe && window.Vimeo) {
           const player = new window.Vimeo.Player(iframe);
           player.destroy();
