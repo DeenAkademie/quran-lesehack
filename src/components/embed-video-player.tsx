@@ -44,6 +44,9 @@ export function EmbedVideoPlayer({
   const playerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Store a reference to the current ref value for cleanup
+    const currentPlayerRef = playerRef.current;
+
     // Vimeo Player API für Events nutzen
     if (playerRef.current) {
       // Vimeo Script laden, falls nicht vorhanden
@@ -59,9 +62,6 @@ export function EmbedVideoPlayer({
         initializePlayer();
       }
     }
-
-    // Store a reference to the current ref value for cleanup
-    const currentPlayerRef = playerRef.current;
 
     function initializePlayer() {
       if (!currentPlayerRef) return;
