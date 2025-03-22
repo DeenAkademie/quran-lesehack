@@ -39,9 +39,13 @@ export function VideoPlayer({
   const [progress, setProgress] = useState(0);
 
   // Konvertiere Vimeo ID in URL - mehrere Formate testen
-  const videoUrl = videoId.includes('/')
-    ? videoId // Falls bereits eine vollständige URL übergeben wurde
-    : `https://vimeo.com/${videoId}`; // Direkte Link-URL, die von React-Player interpretiert wird
+  // Zusätzliche Sicherheit: Prüfe, ob videoId überhaupt gesetzt ist
+  const isValidVideoId = videoId && videoId.trim().length > 0;
+  const videoUrl = isValidVideoId
+    ? videoId.includes('/')
+      ? videoId // Falls bereits eine vollständige URL übergeben wurde
+      : `https://vimeo.com/${videoId}` // Direkte Link-URL
+    : ''; // Leere URL, wenn keine ID vorhanden ist
 
   // Setze Start-Position nach Ready-Event
   useEffect(() => {
@@ -54,20 +58,27 @@ export function VideoPlayer({
   const handleReady = () => {
     setIsReady(true);
     setIsLoading(false);
+    console.log(`Video player ready - Video ID: ${videoId}`);
   };
 
   // Handle player progress
   const handleProgress = (state: { played: number; playedSeconds: number }) => {
-    // Aktualisiere UI-Progress
+    // Aktualisiere nur lokalen UI-Progress, keine häufigen Server-Updates
     setProgress(state.playedSeconds);
 
-    // Aktualisiere externen Fortschritt für Statusverfolgung
-    if (onProgress) {
-      // Konvertiere played (0-1) in Prozent (0-100)
-      const progressPercent = Math.floor(state.played * 100);
-      onProgress(progressPercent, state.playedSeconds);
+    // Prüfe nur, ob 90% erreicht wurden - ohne ständige Updates zu senden
+    if (isReady && onProgress && state.played >= 0.9) {
+      // Nur einmal melden, wenn 90% erreicht sind
+      if (!hasReachedNinetyPercent.current) {
+        console.log('90% des Videos erreicht!');
+        onProgress(90, state.playedSeconds);
+        hasReachedNinetyPercent.current = true;
+      }
     }
   };
+
+  // Referenz für den 90%-Status
+  const hasReachedNinetyPercent = useRef(false);
 
   // Handle player error
   const handleError = (error: unknown) => {
@@ -80,6 +91,10 @@ export function VideoPlayer({
 
   // Handle player ended
   const handleEnded = () => {
+    hasReachedNinetyPercent.current = true;
+    if (onProgress) {
+      onProgress(100, duration);
+    }
     if (onComplete) {
       onComplete();
     }
@@ -99,7 +114,7 @@ export function VideoPlayer({
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
+    const secs = Math.round(seconds % 60);
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
@@ -140,34 +155,42 @@ export function VideoPlayer({
         </div>
       )}
 
-      <ReactPlayer
-        ref={playerRef}
-        url={videoUrl}
-        width='100%'
-        height='100%'
-        playing={playing}
-        volume={volume}
-        muted={muted}
-        onProgress={handleProgress}
-        onDuration={setDuration}
-        onReady={handleReady}
-        onError={handleError}
-        onEnded={handleEnded}
-        config={{
-          vimeo: {
-            playerOptions: {
-              responsive: true,
-              quality: 'auto',
-              controls: false,
-              autopause: false,
-              dnt: true,
-              pip: true,
-              portrait: false,
-              title: false,
+      {!isValidVideoId ? (
+        <div className='absolute inset-0 flex items-center justify-center bg-gray-900 z-10'>
+          <p className='text-yellow-500 p-4 bg-gray-800 rounded-md'>
+            Keine gültige Video-ID gefunden.
+          </p>
+        </div>
+      ) : (
+        <ReactPlayer
+          ref={playerRef}
+          url={videoUrl}
+          width='100%'
+          height='100%'
+          playing={playing}
+          volume={volume}
+          muted={muted}
+          onProgress={handleProgress}
+          onDuration={setDuration}
+          onReady={handleReady}
+          onError={handleError}
+          onEnded={handleEnded}
+          config={{
+            vimeo: {
+              playerOptions: {
+                responsive: true,
+                quality: 'auto',
+                controls: false,
+                autopause: false,
+                dnt: true,
+                pip: true,
+                portrait: false,
+                title: false,
+              },
             },
-          },
-        }}
-      />
+          }}
+        />
+      )}
 
       {/* Barrierefreiheit */}
       <div className='sr-only' aria-live='polite'>

@@ -292,7 +292,16 @@ export async function updateVideoProgress(
   status?: 'available' | 'completed'
 ): Promise<VideoProgress | null> {
   try {
-    // Session abrufen und Auth-Header hinzufügen
+    // Wenn keine gültige ID oder wir nicht "completed" markieren, nichts tun
+    if (!videoId || videoId <= 0 || status !== 'completed') {
+      console.log('Überspringe Update: Ungültige Parameter', {
+        videoId,
+        status,
+      });
+      return null;
+    }
+
+    // Session abrufen
     const { data: sessionData } = await supabase.auth.getSession();
     const session = sessionData.session;
 
@@ -301,27 +310,48 @@ export async function updateVideoProgress(
       return null;
     }
 
+    // Stelle sicher, dass alle Werte gültig sind
+    const validVideoId = parseInt(String(videoId), 10);
+    const validProgressPercent = 100; // Immer 100%
+    const validPositionSeconds = Math.max(Math.round(positionSeconds || 0), 0);
+
+    // Super vereinfachter Request - wir markieren nur als abgeschlossen
+    const requestBody = {
+      video_id: validVideoId,
+      progress_percent: validProgressPercent,
+      current_position_seconds: validPositionSeconds,
+      mark_completed: true, // Immer als abgeschlossen markieren
+    };
+
+    console.log(
+      'Markiere Video als abgeschlossen:',
+      JSON.stringify(requestBody)
+    );
+
+    // Überprüfe, ob der Request-Body gültig ist
+    if (!requestBody.video_id) {
+      console.error('Ungültiger Request-Body: video_id fehlt', requestBody);
+      return null;
+    }
+
+    // API-Aufruf mit explizitem JSON.stringify für den Body
     const { data, error } = await supabase.functions.invoke(
       'video_progress_update',
       {
         headers: {
-          'refresh-token': session.refresh_token,
           Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
         },
-        body: {
-          video_id: videoId,
-          progress_percent: progressPercent,
-          current_position_seconds: positionSeconds,
-          mark_completed: status === 'completed',
-        },
+        body: JSON.stringify(requestBody), // Explizit als String senden
       }
     );
 
     if (error) {
-      console.error('Error updating video progress:', error);
+      console.error('Error marking video as completed:', error);
       return null;
     }
 
+    console.log('Erfolgreiche Antwort:', data);
     return data?.data || null;
   } catch (error) {
     console.error('Error in updateVideoProgress:', error);

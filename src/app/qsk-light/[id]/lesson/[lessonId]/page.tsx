@@ -103,31 +103,155 @@ export default function QSKLessonPage() {
     fetchVideoData();
   }, [videoId, toast]);
 
-  // Funktion zum Aktualisieren des Fortschritts
+  // Funktion zum Aktualisieren des Fortschritts - stark vereinfacht
   const handleProgressUpdate = async (
     progressPercent: number,
     seconds: number
   ) => {
-    if (!video) return;
+    // Wenn das Video noch nicht geladen ist, nichts tun
+    if (!video || !video.id) return;
 
     // Aktualisiere den lokalen State
     setCurrentProgress(progressPercent);
     setCurrentTime(seconds);
 
-    // Speichere nur alle 5 Sekunden, um zu viele API-Aufrufe zu vermeiden
-    if (Math.floor(seconds) % 5 === 0) {
+    // Wir reagieren nur, wenn mindestens 90% erreicht wurden
+    if (progressPercent >= 90) {
+      console.log(
+        'Video zu 90% oder mehr angesehen. Markiere als abgeschlossen.'
+      );
+
       try {
-        await updateVideoProgress(
-          video.id,
-          progressPercent,
-          seconds,
-          progressPercent >= 90 ? 'completed' : 'available'
-        );
+        // Nur EINMAL zum Server senden (wenn noch nicht auf 90%)
+        if (currentProgress < 90) {
+          await updateVideoProgress(
+            video.id,
+            100, // Immer als 100% speichern
+            seconds,
+            'completed' // Immer als abgeschlossen markieren
+          );
+
+          toast({
+            title: 'Video abgeschlossen!',
+            description: nextVideo
+              ? 'Du kannst jetzt zur nächsten Lektion übergehen.'
+              : 'Super! Modul erfolgreich abgeschlossen.',
+          });
+        }
       } catch (error) {
-        console.error('Error updating progress:', error);
+        console.error('Fehler beim Markieren als abgeschlossen:', error);
       }
     }
   };
+
+  // Füge einen Effekt hinzu, um temporäre Fortschrittsdaten anzuwenden, sobald das Video geladen ist
+  useEffect(() => {
+    if (!video || !video.id || video.id <= 0) return;
+
+    // Prüfe, ob temporäre Fortschrittsdaten vorhanden sind
+    const tempProgressKey = `temp_progress_${video.id}`;
+    const tempProgressData = localStorage.getItem(tempProgressKey);
+
+    if (tempProgressData) {
+      try {
+        const { progressPercent, seconds, timestamp } =
+          JSON.parse(tempProgressData);
+
+        // Nur anwenden, wenn die Daten nicht älter als 5 Minuten sind
+        const now = Date.now();
+        const fiveMinutesInMs = 5 * 60 * 1000;
+
+        if (now - timestamp < fiveMinutesInMs) {
+          console.log(
+            `Wende temporären Fortschritt für Video ${video.id} an:`,
+            progressPercent,
+            seconds
+          );
+          handleProgressUpdate(progressPercent, seconds);
+        }
+
+        // Temporäre Daten löschen
+        localStorage.removeItem(tempProgressKey);
+      } catch (error) {
+        console.error(
+          'Fehler beim Anwenden temporärer Fortschrittsdaten:',
+          error
+        );
+        localStorage.removeItem(tempProgressKey);
+      }
+    }
+  }, [video]);
+
+  // Funktion zum Verarbeiten von ausstehenden Updates beim Laden
+  useEffect(() => {
+    if (!video) return;
+
+    // Versuche ausstehende Updates zu senden
+    const processPendingUpdates = async () => {
+      const pendingUpdatesKey = 'pending_video_updates';
+      const pendingUpdates = JSON.parse(
+        localStorage.getItem(pendingUpdatesKey) || '[]'
+      );
+
+      if (pendingUpdates.length === 0) return;
+
+      // Filtere Updates für dieses Video
+      const thisVideoUpdates = pendingUpdates.filter(
+        (update) => update.videoId === video.id
+      );
+      const otherUpdates = pendingUpdates.filter(
+        (update) => update.videoId !== video.id
+      );
+
+      // Wenn keine Updates für dieses Video vorhanden sind, beenden
+      if (thisVideoUpdates.length === 0) return;
+
+      // Nehme das neueste Update für dieses Video
+      const latestUpdate = thisVideoUpdates.reduce(
+        (latest, current) =>
+          current.lastUpdated > latest.lastUpdated ? current : latest,
+        thisVideoUpdates[0]
+      );
+
+      try {
+        await updateVideoProgress(
+          latestUpdate.videoId,
+          latestUpdate.progressPercent,
+          latestUpdate.seconds,
+          latestUpdate.progressPercent >= 90 ? 'completed' : 'available'
+        );
+
+        // Aktualisiere die verbleibenden ausstehenden Updates
+        localStorage.setItem(pendingUpdatesKey, JSON.stringify(otherUpdates));
+      } catch (error) {
+        console.error('Error processing pending updates:', error);
+      }
+    };
+
+    // Versuche, den lokalgespeicherten Fortschritt wiederherzustellen
+    const restoreProgress = () => {
+      const progressKey = `video_progress_${video.id}`;
+      const savedProgress = localStorage.getItem(progressKey);
+
+      if (savedProgress) {
+        try {
+          const { progressPercent, seconds } = JSON.parse(savedProgress);
+          // Nur setzen, wenn der gespeicherte Fortschritt größer ist
+          if (progressPercent > currentProgress) {
+            setCurrentProgress(progressPercent);
+          }
+          if (seconds > currentTime) {
+            setCurrentTime(seconds);
+          }
+        } catch (error) {
+          console.error('Error restoring progress from localStorage:', error);
+        }
+      }
+    };
+
+    restoreProgress();
+    processPendingUpdates();
+  }, [video, currentProgress, currentTime]);
 
   // Funktion bei Abschluss des Videos
   const handleLessonComplete = async () => {
