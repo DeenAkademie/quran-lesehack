@@ -9,6 +9,9 @@ export interface VideoModule {
   duration_minutes: number;
   image_url: string;
   display_order: number;
+  unlocked: boolean;
+  completed: boolean;
+  completion_percent: number;
   sections: VideoSection[];
 }
 
@@ -18,6 +21,9 @@ export interface VideoSection {
   title: string;
   duration_minutes: number;
   display_order: number;
+  unlocked: boolean;
+  completed: boolean;
+  completion_percent: number;
   videos: Video[];
 }
 
@@ -33,6 +39,8 @@ export interface Video {
   exercise_id: number | null;
   display_order: number;
   has_exercise: boolean;
+  unlocked: boolean;
+  completed: boolean;
   progress: VideoProgress | null;
 }
 
@@ -162,6 +170,8 @@ export async function getVideo(videoId: number): Promise<{
           exercise_id: videoData.exercise_id,
           display_order: 0, // Not provided by API
           has_exercise: videoData.has_exercise,
+          unlocked: true, // Default to true as we're viewing this module
+          completed: false, // Default value
           progress: videoData.progress
             ? {
                 video_id: videoData.id,
@@ -182,6 +192,9 @@ export async function getVideo(videoId: number): Promise<{
           duration_minutes: 0, // Not provided by API
           image_url: '', // Not provided by API
           display_order: 0, // Not provided by API
+          unlocked: true, // Default to true as we're viewing this module
+          completed: false, // Default value
+          completion_percent: 0, // Default value
           sections: [], // Not provided by API
         };
 
@@ -192,6 +205,9 @@ export async function getVideo(videoId: number): Promise<{
           title: videoData.section_title,
           duration_minutes: 0, // Not provided by API
           display_order: 0, // Not provided by API
+          unlocked: true, // Default to true as we're viewing this section
+          completed: false, // Default value
+          completion_percent: 0, // Default value
           videos: [], // Not provided by API
         };
 
@@ -210,6 +226,8 @@ export async function getVideo(videoId: number): Promise<{
             exercise_id: null,
             display_order: 0, // Not provided by API
             has_exercise: false, // Not provided by API
+            unlocked: false, // Default value
+            completed: false, // Default value
             progress: null,
           };
         }
@@ -229,6 +247,8 @@ export async function getVideo(videoId: number): Promise<{
             exercise_id: null,
             display_order: 0, // Not provided by API
             has_exercise: false, // Not provided by API
+            unlocked: false, // Default value
+            completed: false, // Default value
             progress: null,
           };
         }

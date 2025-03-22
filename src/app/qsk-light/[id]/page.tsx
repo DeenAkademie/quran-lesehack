@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Clock, FileText, CheckCircle, Video, LockIcon } from 'lucide-react';
+import { LockIcon, CheckIcon, PlayIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
 import {
   getAllVideos,
   VideoModule,
@@ -57,166 +56,210 @@ export default function QSKModulePage() {
     fetchModuleData();
   }, [moduleId]);
 
+  // Render Module und Sections
   return (
     <div className='p-6'>
       <div className='flex items-center mb-6'>
         <Link href='/qsk-light' className='text-[#4AA4DE] hover:underline mr-2'>
-          &larr; Zurück zum QSK-Light Kurs
+          &larr; Zurück zur Modulübersicht
         </Link>
       </div>
 
       {isLoading ? (
-        // Lade-Skeletons
+        <div className='space-y-4'>
+          <Skeleton className='h-12 w-1/2' />
+          <Skeleton className='h-6 w-3/4' />
+          <Skeleton className='h-64 w-full' />
+        </div>
+      ) : moduleInfo ? (
         <>
-          <Skeleton className='h-12 w-1/2 mb-3' />
-          <Skeleton className='h-6 w-3/4 mb-10' />
-          <div className='space-y-8'>
-            {[1, 2, 3].map((i) => (
-              <div key={i}>
-                <Skeleton className='h-10 w-1/3 mb-4' />
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8'>
-                  {[1, 2, 3].map((j) => (
-                    <Skeleton key={j} className='aspect-video w-full' />
-                  ))}
+          <h1 className='text-2xl font-bold mb-1'>{moduleInfo.title}</h1>
+          <p className='mb-6 text-gray-600'>{moduleInfo.description}</p>
+
+          {/* Gesamtfortschritt für das Modul */}
+          <div className='mb-6'>
+            <div className='flex justify-between mb-1'>
+              <span className='text-sm font-semibold'>Gesamtfortschritt</span>
+              <span className='text-sm font-medium'>
+                {moduleInfo.completion_percent}%
+              </span>
+            </div>
+            <div className='w-full bg-gray-200 rounded-full h-2.5'>
+              <div
+                className='bg-[#4AA4DE] h-2.5 rounded-full'
+                style={{ width: `${moduleInfo.completion_percent}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {!moduleInfo.unlocked && (
+            <div className='mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md'>
+              <p className='text-yellow-800 font-medium'>
+                <LockIcon className='inline-block mr-2 h-5 w-5' />
+                Dieses Modul ist aktuell gesperrt. Schließe das vorherige Modul
+                ab, um es freizuschalten.
+              </p>
+            </div>
+          )}
+
+          {sections.map((section) => (
+            <div key={section.id} className='mb-8'>
+              <h2 className='text-xl font-semibold mb-4 flex items-center'>
+                {section.title}
+                {section.completed && (
+                  <CheckIcon className='ml-2 h-5 w-5 text-green-500' />
+                )}
+              </h2>
+
+              {/* Sektions-Fortschritt */}
+              <div className='mb-4'>
+                <div className='flex justify-between mb-1'>
+                  <span className='text-sm font-medium'>Fortschritt</span>
+                  <span className='text-sm font-medium'>
+                    {section.completion_percent}%
+                  </span>
+                </div>
+                <div className='w-full bg-gray-200 rounded-full h-2'>
+                  <div
+                    className='bg-[#4AA4DE] h-2 rounded-full'
+                    style={{ width: `${section.completion_percent}%` }}
+                  ></div>
                 </div>
               </div>
-            ))}
-          </div>
-        </>
-      ) : (
-        moduleInfo && (
-          <>
-            <div className='mb-8'>
-              <h1 className='text-2xl font-bold mb-1'>
-                Modul {moduleInfo.id}: {moduleInfo.title}
-              </h1>
-              <p className='text-gray-500 mb-4'>{moduleInfo.description}</p>
-              <div className='flex items-center text-sm text-gray-500'>
-                <span className='mr-4'>
-                  {moduleInfo.lessons_count} Lektionen
-                </span>
-                <span>{moduleInfo.duration_minutes} Minuten</span>
-              </div>
-            </div>
 
-            {Array.isArray(sections) &&
-              sections
-                .sort((a, b) => a.display_order - b.display_order)
-                .map((section) => {
-                  return (
-                    <div key={section.id} className='mb-8'>
-                      <div className='bg-[#4AA4DE] text-white p-3 rounded-t-lg'>
-                        <div className='flex items-center'>
-                          <span className='mr-2'>{section.title}</span>
-                          <Clock className='h-4 w-4 inline mr-1' />
-                          <span className='text-sm'>
-                            {section.duration_minutes} Min.
-                          </span>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                {section.videos.map((video) => (
+                  <div
+                    key={video.id}
+                    className={`border ${
+                      video.unlocked
+                        ? video.completed
+                          ? 'border-green-300 bg-green-50'
+                          : 'border-gray-200'
+                        : 'border-gray-200 bg-gray-50 opacity-75'
+                    } rounded-lg overflow-hidden shadow-sm transition-all hover:shadow-md`}
+                  >
+                    <div className='relative'>
+                      <div
+                        className='aspect-video bg-center bg-cover'
+                        style={{
+                          backgroundImage: `url(${
+                            video.thumbnail_url ||
+                            '/img/thumbnail-placeholder.jpg'
+                          })`,
+                        }}
+                      ></div>
+
+                      {/* Status Badge */}
+                      {video.completed ? (
+                        <div className='absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full'>
+                          Abgeschlossen
                         </div>
-                      </div>
-                      <div className='border border-gray-200 rounded-b-lg'>
-                        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6'>
-                          {section.videos &&
-                            Array.isArray(section.videos) &&
-                            section.videos
-                              .sort((a, b) => a.display_order - b.display_order)
-                              .map((video, videoIndex) => {
-                                console.log(
-                                  `Video ${video.id} Status:`,
-                                  video.progress?.status
-                                );
-
-                                // Setze isAvailable auf true für das erste Video jeder Sektion
-                                let isAvailable =
-                                  video.progress?.status === 'available' ||
-                                  video.progress?.status === 'completed';
-
-                                // Erzwinge isAvailable=true für das erste Video in jeder Sektion
-                                if (videoIndex === 0) {
-                                  isAvailable = true;
-                                }
-
-                                const isCompleted =
-                                  video.progress?.status === 'completed';
-
-                                return (
-                                  <div
-                                    key={video.id}
-                                    className={`border border-gray-200 rounded-lg overflow-hidden ${
-                                      !isAvailable ? 'opacity-70' : ''
-                                    }`}
-                                  >
-                                    <div className='relative'>
-                                      <div className='aspect-video'>
-                                        <Image
-                                          src={
-                                            video.thumbnail_url ||
-                                            (video.type === 'video'
-                                              ? '/img/lesson-video.jpg'
-                                              : '/img/lesson-exercise.jpg')
-                                          }
-                                          alt={video.title}
-                                          width={640}
-                                          height={360}
-                                          className='w-full'
-                                        />
-                                        {isCompleted && (
-                                          <div className='absolute top-2 right-2'>
-                                            <CheckCircle className='h-6 w-6 text-green-500 bg-white rounded-full' />
-                                          </div>
-                                        )}
-                                        {!isAvailable && (
-                                          <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-50'>
-                                            <LockIcon className='h-12 w-12 text-white' />
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                    <div className='p-4'>
-                                      <div className='flex items-center mb-1'>
-                                        {video.type === 'video' ? (
-                                          <Video className='h-4 w-4 text-[#4AA4DE] mr-2' />
-                                        ) : (
-                                          <FileText className='h-4 w-4 text-[#4AA4DE] mr-2' />
-                                        )}
-                                        <h3 className='font-medium'>
-                                          {video.title}
-                                        </h3>
-                                      </div>
-                                      <div className='flex items-center text-sm text-gray-500 mb-3'>
-                                        <Clock className='h-3 w-3 inline mr-1' />
-                                        <span>
-                                          {video.duration_minutes} Min.
-                                        </span>
-                                      </div>
-                                      <Button
-                                        onClick={() => {
-                                          if (isAvailable) {
-                                            router.push(
-                                              `/qsk-light/${moduleId}/lesson/${video.id}`
-                                            );
-                                          }
-                                        }}
-                                        disabled={!isAvailable}
-                                        className='w-full bg-[#4AA4DE] hover:bg-[#3993CD] text-white disabled:bg-gray-300'
-                                      >
-                                        {isCompleted
-                                          ? 'Video ansehen'
-                                          : isAvailable
-                                          ? 'Starten'
-                                          : 'Gesperrt'}
-                                      </Button>
-                                    </div>
-                                  </div>
-                                );
-                              })}
+                      ) : video.unlocked ? (
+                        <div className='absolute top-2 right-2 bg-[#4AA4DE] text-white text-xs px-2 py-1 rounded-full'>
+                          Verfügbar
                         </div>
+                      ) : (
+                        <div className='absolute top-2 right-2 bg-gray-500 text-white text-xs px-2 py-1 rounded-full'>
+                          Gesperrt
+                        </div>
+                      )}
+
+                      {/* Play Button oder Lock Icon */}
+                      <div className='absolute inset-0 flex items-center justify-center'>
+                        {video.unlocked ? (
+                          <div className='rounded-full bg-white/80 p-3 shadow-md hover:bg-white transition-colors'>
+                            <PlayIcon className='h-8 w-8 text-[#4AA4DE]' />
+                          </div>
+                        ) : (
+                          <div className='rounded-full bg-gray-200/80 p-3'>
+                            <LockIcon className='h-8 w-8 text-gray-500' />
+                          </div>
+                        )}
                       </div>
                     </div>
-                  );
-                })}
-          </>
-        )
+
+                    <div className='p-4'>
+                      <h3 className='font-medium mb-1 truncate'>
+                        {video.title}
+                      </h3>
+                      <div className='flex justify-between text-sm text-gray-500'>
+                        <span>{video.duration_minutes} min</span>
+
+                        {video.progress &&
+                          video.progress.progress_percent > 0 &&
+                          video.progress.progress_percent < 100 && (
+                            <span>
+                              {video.progress.progress_percent}% gesehen
+                            </span>
+                          )}
+                      </div>
+
+                      {/* Progress Bar */}
+                      {video.progress &&
+                        video.progress.progress_percent > 0 && (
+                          <div className='mt-2 w-full bg-gray-200 rounded-full h-1.5'>
+                            <div
+                              className='bg-[#4AA4DE] h-1.5 rounded-full'
+                              style={{
+                                width: `${video.progress.progress_percent}%`,
+                              }}
+                            ></div>
+                          </div>
+                        )}
+
+                      <div className='mt-4'>
+                        {video.unlocked ? (
+                          <Button
+                            onClick={() =>
+                              router.push(
+                                `/qsk-light/${moduleId}/lesson/${video.id}`
+                              )
+                            }
+                            className='w-full'
+                            variant={video.completed ? 'outline' : 'default'}
+                          >
+                            {video.completed ? 'Wiederholen' : 'Ansehen'}
+                          </Button>
+                        ) : (
+                          <Button className='w-full' variant='outline' disabled>
+                            <LockIcon className='mr-2 h-4 w-4' />
+                            Gesperrt
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {moduleInfo.completed && (
+            <div className='mt-8 p-4 bg-green-50 border border-green-200 rounded-md text-center'>
+              <CheckIcon className='mx-auto h-12 w-12 text-green-500 mb-2' />
+              <h3 className='text-xl font-bold text-green-700 mb-2'>
+                Glückwunsch!
+              </h3>
+              <p className='text-green-700'>
+                Du hast dieses Modul vollständig abgeschlossen.
+              </p>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className='p-6 bg-red-50 border border-red-200 rounded-md'>
+          <h2 className='text-xl font-bold text-red-700'>
+            Modul nicht gefunden
+          </h2>
+          <p className='mt-2'>
+            Das gesuchte Modul konnte nicht geladen werden. Bitte versuche es
+            später erneut.
+          </p>
+          <Button onClick={() => router.push('/qsk-light')} className='mt-4'>
+            Zurück zur Modulübersicht
+          </Button>
+        </div>
       )}
     </div>
   );

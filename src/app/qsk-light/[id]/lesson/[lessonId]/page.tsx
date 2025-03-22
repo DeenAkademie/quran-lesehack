@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
-import { VimeoPlayer } from '@/components/vimeo-player';
+import { VideoPlayer } from '@/components/video-player';
 import { getVideo, updateVideoProgress, Video } from '@/services/video-service';
 
 export default function QSKLessonPage() {
@@ -220,8 +220,8 @@ export default function QSKLessonPage() {
           <div className='mb-6'>
             <p className='mb-2'>Debug: Using Vimeo ID: {video.vimeo_id}</p>
             {video.vimeo_id ? (
-              <VimeoPlayer
-                vimeoId={video.vimeo_id}
+              <VideoPlayer
+                videoId={video.vimeo_id}
                 title={video.title}
                 onProgress={handleProgressUpdate}
                 onComplete={handleLessonComplete}

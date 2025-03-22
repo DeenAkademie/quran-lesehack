@@ -1,57 +1,106 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import ReactPlayer from 'react-player/lazy';
-import { Button } from '@/components/ui/button';
+import { useRef, useEffect, useState } from 'react';
+import ReactPlayer from 'react-player';
 import { cn } from '@/lib/utils';
 import { Play, Volume2, VolumeX, Pause, Maximize2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface VideoPlayerProps {
-  vimeoId: string;
+  videoId: string; // Vimeo ID
+  title: string;
+  onComplete?: () => void;
+  onProgress?: (progressPercent: number, currentTime: number) => void;
+  autoPlay?: boolean;
+  startTime?: number;
   className?: string;
   aspectRatio?: 'square' | 'video' | '4/3';
-  autoPlay?: boolean;
 }
 
 export function VideoPlayer({
-  vimeoId,
+  videoId,
+  title,
+  onComplete,
+  onProgress,
+  autoPlay = false,
+  startTime = 0,
   className,
   aspectRatio = 'video',
-  autoPlay = false,
 }: VideoPlayerProps) {
+  const playerRef = useRef<ReactPlayer>(null);
+  const playerContainerRef = useRef<HTMLDivElement>(null);
+  const [isReady, setIsReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [playing, setPlaying] = useState(autoPlay);
   const [volume, setVolume] = useState(0.8);
   const [muted, setMuted] = useState(false);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [loading, setLoading] = useState(true);
 
-  const playerRef = useRef<ReactPlayer>(null);
-  const playerContainerRef = useRef<HTMLDivElement>(null);
+  // Konvertiere Vimeo ID in URL - mehrere Formate testen
+  const videoUrl = videoId.includes('/')
+    ? videoId // Falls bereits eine vollständige URL übergeben wurde
+    : `https://vimeo.com/${videoId}`; // Direkte Link-URL, die von React-Player interpretiert wird
 
-  // Setup Vimeo URL
-  const vimeoUrl = `https://vimeo.com/${vimeoId}`;
+  // Setze Start-Position nach Ready-Event
+  useEffect(() => {
+    if (isReady && startTime > 0 && playerRef.current) {
+      playerRef.current.seekTo(startTime, 'seconds');
+    }
+  }, [isReady, startTime]);
+
+  // Handle player ready
+  const handleReady = () => {
+    setIsReady(true);
+    setIsLoading(false);
+  };
+
+  // Handle player progress
+  const handleProgress = (state: { played: number; playedSeconds: number }) => {
+    // Aktualisiere UI-Progress
+    setProgress(state.playedSeconds);
+
+    // Aktualisiere externen Fortschritt für Statusverfolgung
+    if (onProgress) {
+      // Konvertiere played (0-1) in Prozent (0-100)
+      const progressPercent = Math.floor(state.played * 100);
+      onProgress(progressPercent, state.playedSeconds);
+    }
+  };
+
+  // Handle player error
+  const handleError = (error: unknown) => {
+    console.error('Video player error:', error);
+    setError(
+      'Fehler beim Laden des Videos. Bitte versuche es später noch einmal.'
+    );
+    setIsLoading(false);
+  };
+
+  // Handle player ended
+  const handleEnded = () => {
+    if (onComplete) {
+      onComplete();
+    }
+  };
 
   const handlePlayPause = () => {
     setPlaying(!playing);
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setVolume(parseFloat(e.target.value));
   };
 
   const handleToggleMute = () => {
     setMuted(!muted);
   };
 
-  const handleProgress = (state: { played: number; playedSeconds: number }) => {
-    setProgress(state.playedSeconds);
-  };
-
-  const handleDuration = (duration: number) => {
-    setDuration(duration);
-  };
-
   const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
   const handleFullscreen = () => {
@@ -64,12 +113,6 @@ export function VideoPlayer({
     } else {
       document.exitFullscreen();
     }
-  };
-
-  // Behandle Lautstärkeänderungen
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
   };
 
   return (
@@ -85,112 +128,109 @@ export function VideoPlayer({
         className
       )}
     >
-      {loading && (
+      {isLoading && (
         <div className='absolute inset-0 flex items-center justify-center bg-gray-900 z-10'>
           <div className='w-12 h-12 rounded-full border-4 border-gray-600 border-t-[#4AA4DE] animate-spin'></div>
         </div>
       )}
 
+      {error && (
+        <div className='absolute inset-0 flex items-center justify-center bg-gray-900 z-10'>
+          <p className='text-red-500 p-4 bg-gray-800 rounded-md'>{error}</p>
+        </div>
+      )}
+
       <ReactPlayer
         ref={playerRef}
-        url={vimeoUrl}
+        url={videoUrl}
         width='100%'
         height='100%'
         playing={playing}
         volume={volume}
         muted={muted}
         onProgress={handleProgress}
-        onDuration={handleDuration}
-        onReady={() => setLoading(false)}
-        onBuffer={() => setLoading(true)}
-        onBufferEnd={() => setLoading(false)}
+        onDuration={setDuration}
+        onReady={handleReady}
+        onError={handleError}
+        onEnded={handleEnded}
         config={{
           vimeo: {
             playerOptions: {
               responsive: true,
               quality: 'auto',
               controls: false,
+              autopause: false,
+              dnt: true,
+              pip: true,
+              portrait: false,
+              title: false,
             },
           },
         }}
       />
 
+      {/* Barrierefreiheit */}
+      <div className='sr-only' aria-live='polite'>
+        {isReady
+          ? `Video ${title} ist bereit zur Wiedergabe`
+          : 'Video wird geladen'}
+      </div>
+
       {/* Custom Controls Overlay */}
-      <div className='absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent opacity-100 transition-opacity duration-300 hover:opacity-100'>
-        <div className='flex flex-col gap-2'>
-          {/* Progress Bar */}
-          <div
-            className='relative w-full h-1 bg-gray-600 rounded cursor-pointer'
-            onClick={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              const percent = (e.clientX - rect.left) / rect.width;
-              playerRef.current?.seekTo(percent * duration);
-            }}
+      <div className='absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black to-transparent opacity-0 hover:opacity-100 transition-opacity'>
+        <div className='flex items-center justify-between'>
+          <Button
+            variant='ghost'
+            size='icon'
+            className='text-white'
+            onClick={handlePlayPause}
           >
-            <div
-              className='absolute top-0 left-0 h-full bg-[#4AA4DE] rounded'
-              style={{ width: `${(progress / duration) * 100}%` }}
-            />
+            {playing ? <Pause size={20} /> : <Play size={20} />}
+          </Button>
+
+          <div className='flex items-center space-x-2 text-white text-sm'>
+            <span>{formatTime(progress)}</span>
+            <span>/</span>
+            <span>{formatTime(duration)}</span>
           </div>
 
-          {/* Controls Row */}
-          <div className='flex items-center justify-between text-white'>
-            <div className='flex items-center gap-3'>
-              <Button
-                variant='ghost'
-                size='icon'
-                className='p-1 h-8 w-8 rounded-full text-white hover:bg-white/20'
-                onClick={handlePlayPause}
-              >
-                {playing ? (
-                  <Pause className='h-5 w-5' />
-                ) : (
-                  <Play className='h-5 w-5' />
-                )}
-              </Button>
+          <div className='flex items-center space-x-2'>
+            <Button
+              variant='ghost'
+              size='icon'
+              className='text-white'
+              onClick={handleToggleMute}
+            >
+              {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            </Button>
 
-              <Button
-                variant='ghost'
-                size='icon'
-                className='p-1 h-8 w-8 rounded-full text-white hover:bg-white/20'
-                onClick={handleToggleMute}
-              >
-                {muted ? (
-                  <VolumeX className='h-5 w-5' />
-                ) : (
-                  <Volume2 className='h-5 w-5' />
-                )}
-              </Button>
-
-              {/* Volume Slider (nur sichtbar, wenn nicht stummgeschaltet) */}
-              {!muted && (
-                <div className='hidden sm:block w-16'>
-                  <input
-                    type='range'
-                    min='0'
-                    max='1'
-                    step='0.01'
-                    value={volume}
-                    onChange={handleVolumeChange}
-                    className='w-full h-1 bg-gray-600 rounded appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white'
-                  />
-                </div>
-              )}
-
-              <span className='text-sm font-medium'>
-                {formatTime(progress)} / {formatTime(duration)}
-              </span>
-            </div>
+            <input
+              type='range'
+              min={0}
+              max={1}
+              step={0.1}
+              value={volume}
+              onChange={handleVolumeChange}
+              className='w-20'
+            />
 
             <Button
               variant='ghost'
               size='icon'
-              className='p-1 h-8 w-8 rounded-full text-white hover:bg-white/20'
+              className='text-white'
               onClick={handleFullscreen}
             >
-              <Maximize2 className='h-5 w-5' />
+              <Maximize2 size={20} />
             </Button>
           </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className='w-full bg-gray-600 h-1 mt-2 rounded-full overflow-hidden'>
+          <div
+            className='bg-[#4AA4DE] h-full'
+            style={{ width: `${(progress / duration) * 100}%` }}
+          ></div>
         </div>
       </div>
     </div>
