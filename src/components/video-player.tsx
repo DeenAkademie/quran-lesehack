@@ -3,8 +3,21 @@
 import { useRef, useEffect, useState } from 'react';
 import ReactPlayer from 'react-player';
 import { cn } from '@/lib/utils';
-import { Play, Volume2, VolumeX, Pause, Maximize2 } from 'lucide-react';
+import {
+  Play,
+  Volume2,
+  VolumeX,
+  Pause,
+  Maximize2,
+  ChevronDown,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface VideoPlayerProps {
   videoId: string; // Vimeo ID
@@ -29,6 +42,7 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
   const playerRef = useRef<ReactPlayer>(null);
   const playerContainerRef = useRef<HTMLDivElement>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
   const [isReady, setIsReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +51,7 @@ export function VideoPlayer({
   const [muted, setMuted] = useState(false);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [playbackRate, setPlaybackRate] = useState(1);
 
   // Konvertiere Vimeo ID in URL - mehrere Formate testen
   // Zusätzliche Sicherheit: Prüfe, ob videoId überhaupt gesetzt ist
@@ -130,6 +145,25 @@ export function VideoPlayer({
     }
   };
 
+  // Handle timeline click to jump to a specific time point
+  const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!progressBarRef.current || !playerRef.current || !isReady) return;
+
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const clickPositionRatio = offsetX / rect.width;
+    const seekToTime = duration * clickPositionRatio;
+
+    // Seek to the clicked position
+    playerRef.current.seekTo(seekToTime, 'seconds');
+    setProgress(seekToTime);
+  };
+
+  // Handle playback rate change
+  const handlePlaybackRateChange = (rate: number) => {
+    setPlaybackRate(rate);
+  };
+
   return (
     <div
       ref={playerContainerRef}
@@ -170,6 +204,7 @@ export function VideoPlayer({
           playing={playing}
           volume={volume}
           muted={muted}
+          playbackRate={playbackRate}
           onProgress={handleProgress}
           onDuration={setDuration}
           onReady={handleReady}
@@ -218,6 +253,43 @@ export function VideoPlayer({
           </div>
 
           <div className='flex items-center space-x-2'>
+            {/* Playback Rate Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  className='text-white text-xs'
+                >
+                  {playbackRate}x <ChevronDown size={12} className='ml-1' />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end'>
+                <DropdownMenuItem onClick={() => handlePlaybackRateChange(0.5)}>
+                  0.5x
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handlePlaybackRateChange(0.75)}
+                >
+                  0.75x
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handlePlaybackRateChange(1)}>
+                  1x (Normal)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handlePlaybackRateChange(1.25)}
+                >
+                  1.25x
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handlePlaybackRateChange(1.5)}>
+                  1.5x
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handlePlaybackRateChange(2)}>
+                  2x
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Button
               variant='ghost'
               size='icon'
@@ -248,8 +320,12 @@ export function VideoPlayer({
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className='w-full bg-gray-600 h-1 mt-2 rounded-full overflow-hidden'>
+        {/* Progress Bar (Clickable Timeline) */}
+        <div
+          ref={progressBarRef}
+          className='w-full bg-gray-600 h-2 mt-2 rounded-full overflow-hidden cursor-pointer'
+          onClick={handleTimelineClick}
+        >
           <div
             className='bg-[#4AA4DE] h-full'
             style={{ width: `${(progress / duration) * 100}%` }}
