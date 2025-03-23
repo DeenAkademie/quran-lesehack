@@ -127,10 +127,11 @@ export default function QSKLightPage() {
                     </div>
                   </div>
                 ))
-              : // Nur Module anzeigen, die zur aktuellen Lernfortschritt oder niedriger gehören
-                modules
-                  .filter((module) => module.id <= currentModule)
-                  .map((module) => (
+              : // Alle Module anzeigen, aber gesperrte entsprechend kennzeichnen
+                modules.map((module) => {
+                  const isUnlocked = module.id <= currentModule;
+
+                  return (
                     <div
                       key={module.id}
                       className='border border-gray-200 rounded-lg overflow-hidden'
@@ -145,9 +146,38 @@ export default function QSKLightPage() {
                             width={640}
                             height={360}
                             priority={module.id === 1}
-                            className='w-full'
+                            className={`w-full ${
+                              isUnlocked ? '' : 'opacity-50'
+                            }`}
                           />
                         </div>
+                        {!isUnlocked && (
+                          <div className='absolute inset-0 flex items-center justify-center'>
+                            <div className='bg-gray-500 rounded-full p-2'>
+                              <svg
+                                width='24'
+                                height='24'
+                                viewBox='0 0 24 24'
+                                fill='none'
+                                xmlns='http://www.w3.org/2000/svg'
+                              >
+                                <rect
+                                  x='5'
+                                  y='10'
+                                  width='14'
+                                  height='10'
+                                  rx='2'
+                                  fill='white'
+                                />
+                                <path
+                                  d='M8 10V6C8 3.79086 9.79086 2 12 2C14.2091 2 16 3.79086 16 6V10'
+                                  stroke='white'
+                                  strokeWidth='2'
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div className='p-4'>
                         <div className='flex justify-between items-center'>
@@ -156,17 +186,27 @@ export default function QSKLightPage() {
                             <span className='text-xl'>{module.title}</span>
                           </h2>
                         </div>
-                        <Button
-                          asChild
-                          className='w-full mt-3 bg-[#4AA4DE] hover:bg-[#3993CD] text-white'
-                        >
-                          <Link href={`/qsk-light/${module.id}`}>
-                            Modul ansehen
-                          </Link>
-                        </Button>
+                        {isUnlocked ? (
+                          <Button
+                            asChild
+                            className='w-full mt-3 bg-[#4AA4DE] hover:bg-[#3993CD] text-white'
+                          >
+                            <Link href={`/qsk-light/${module.id}`}>
+                              Modul ansehen
+                            </Link>
+                          </Button>
+                        ) : (
+                          <Button
+                            className='w-full mt-3 bg-gray-200 text-gray-400 cursor-not-allowed'
+                            disabled
+                          >
+                            Modul gesperrt
+                          </Button>
+                        )}
                       </div>
                     </div>
-                  ))}
+                  );
+                })}
           </div>
         </div>
       </div>

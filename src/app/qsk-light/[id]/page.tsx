@@ -113,13 +113,13 @@ export default function QSKModulePage() {
 
               {/* Sektions-Fortschritt */}
               <div className='mb-4'>
-                <div className='flex justify-between mb-1'>
+                <div className='flex justify-between mb-1 opacity-0'>
                   <span className='text-sm font-medium'>Fortschritt</span>
                   <span className='text-sm font-medium'>
                     {section.completion_percent}%
                   </span>
                 </div>
-                <div className='w-full bg-gray-200 rounded-full h-2'>
+                <div className='w-full bg-gray-200 rounded-full h-2 opacity-0'>
                   <div
                     className='bg-[#4AA4DE] h-2 rounded-full'
                     style={{ width: `${section.completion_percent}%` }}
