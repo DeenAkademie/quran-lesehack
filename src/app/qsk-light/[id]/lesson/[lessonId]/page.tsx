@@ -115,15 +115,15 @@ export default function QSKLessonPage() {
     setCurrentProgress(progressPercent);
     setCurrentTime(seconds);
 
-    // Wir reagieren nur, wenn mindestens 90% erreicht wurden
-    if (progressPercent >= 90) {
+    // Wir reagieren nur, wenn mindestens 99% erreicht wurden
+    if (progressPercent >= 99) {
       console.log(
-        'Video zu 90% oder mehr angesehen. Markiere als abgeschlossen.'
+        'Video zu 99% oder mehr angesehen. Markiere als abgeschlossen.'
       );
 
       try {
-        // Nur EINMAL zum Server senden (wenn noch nicht auf 90%)
-        if (currentProgress < 90) {
+        // Nur EINMAL zum Server senden (wenn noch nicht auf 99%)
+        if (currentProgress < 99) {
           await updateVideoProgress(
             video.id,
             100, // Immer als 100% speichern
@@ -218,7 +218,7 @@ export default function QSKLessonPage() {
           latestUpdate.videoId,
           latestUpdate.progressPercent,
           latestUpdate.seconds,
-          latestUpdate.progressPercent >= 90 ? 'completed' : 'available'
+          latestUpdate.progressPercent >= 99 ? 'completed' : 'available'
         );
 
         // Aktualisiere die verbleibenden ausstehenden Updates
@@ -397,7 +397,7 @@ export default function QSKLessonPage() {
               <Button
                 onClick={goToNextLesson}
                 className='bg-[#4AA4DE] hover:bg-[#3993CD] text-white px-6'
-                disabled={currentProgress < 90}
+                disabled={currentProgress < 99}
               >
                 Nächstes Video
                 <ArrowRight className='ml-2 h-4 w-4' />
@@ -405,9 +405,9 @@ export default function QSKLessonPage() {
             )}
           </div>
 
-          {currentProgress < 90 && nextVideo && (
+          {currentProgress < 99 && nextVideo && (
             <p className='text-center text-sm text-gray-500 mt-4'>
-              Schaue mindestens 90% des Videos, um zur nächsten Lektion zu
+              Schaue mindestens 99% des Videos, um zur nächsten Lektion zu
               gelangen.
             </p>
           )}

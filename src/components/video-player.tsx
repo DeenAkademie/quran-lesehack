@@ -66,12 +66,12 @@ export function VideoPlayer({
     // Aktualisiere nur lokalen UI-Progress, keine häufigen Server-Updates
     setProgress(state.playedSeconds);
 
-    // Prüfe nur, ob 90% erreicht wurden - ohne ständige Updates zu senden
-    if (isReady && onProgress && state.played >= 0.9) {
-      // Nur einmal melden, wenn 90% erreicht sind
+    // Prüfe nur, ob 99% erreicht wurden - ohne ständige Updates zu senden
+    if (isReady && onProgress && state.played >= 0.99) {
+      // Nur einmal melden, wenn 99% erreicht sind
       if (!hasReachedNinetyPercent.current) {
-        console.log('90% des Videos erreicht!');
-        onProgress(90, state.playedSeconds);
+        console.log('99% des Videos erreicht!');
+        onProgress(99, state.playedSeconds);
         hasReachedNinetyPercent.current = true;
       }
     }
@@ -259,3 +259,4 @@ export function VideoPlayer({
     </div>
   );
 }
+

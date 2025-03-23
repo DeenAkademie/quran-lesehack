@@ -6,7 +6,7 @@ import Image from 'next/image';
 import {
   Home,
   BookOpen,
-  Video,
+  // Video,
   FileQuestion,
   LogOut,
   Info,
@@ -33,7 +33,7 @@ export function MainNav({ className }: MainNavProps) {
       label: 'Deine Kurse',
       icon: <BookOpen className='h-5 w-5' />,
     },
-    { href: '/videos', label: 'Videos', icon: <Video className='h-5 w-5' /> },
+    // { href: '/videos', label: 'Videos', icon: <Video className='h-5 w-5' /> },
     {
       href: '/qsk-light',
       label: 'QSK-Light',

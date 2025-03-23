@@ -66,7 +66,7 @@ export function UserProgressWidget() {
           <div className='flex items-center gap-2'>
             <div className='bg-amber-100 p-1.5 rounded-full'>
               <Image
-                src='/img/coin.png'
+                src='/img/coins-stack.svg'
                 alt='Hasanat'
                 width={24}
                 height={24}

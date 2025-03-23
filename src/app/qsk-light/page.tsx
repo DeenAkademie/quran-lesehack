@@ -58,9 +58,9 @@ export default function QSKLightPage() {
       : 1;
 
   // Berechne den Fortschritt
-  const totalModules = Array.isArray(modules) ? modules.length : 0 || 3;
-  const progress = Math.round((currentModule / totalModules) * 100);
-  const progressWidth = `${progress}%`;
+  // const totalModules = Array.isArray(modules) ? modules.length : 0 || 3;
+  // const progress = Math.round((currentModule / totalModules) * 100);
+  // const progressWidth = `${progress}%`;
 
   return (
     <div className='p-6'>
@@ -75,7 +75,7 @@ export default function QSKLightPage() {
         Dein persönlicher Lernpfad zum erfolgreichen Quran Lesen
       </p>
 
-      <div className='bg-[#4AA4DE] text-white p-3 rounded-t-lg'>
+      {/* <div className='bg-[#4AA4DE] text-white p-3 rounded-t-lg'>
         Kursfortschritt
       </div>
       <div className='border border-gray-200 rounded-b-lg p-6 mb-6'>
@@ -104,7 +104,7 @@ export default function QSKLightPage() {
         <div className='text-sm text-gray-500'>
           {progress}% des Kurses abgeschlossen
         </div>
-      </div>
+      </div> */}
 
       <div>
         <div className='bg-[#4AA4DE] text-white p-3 rounded-t-lg'>
