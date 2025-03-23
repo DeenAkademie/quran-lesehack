@@ -36,7 +36,7 @@ export function MainNav({ className }: MainNavProps) {
     // { href: '/videos', label: 'Videos', icon: <Video className='h-5 w-5' /> },
     {
       href: '/qsk-light',
-      label: 'QSK-Light',
+      label: 'QSK-Lesehack',
       icon: <GraduationCap className='h-5 w-5' />,
     },
     {
