@@ -213,7 +213,7 @@ export default function QuizzesPage() {
             >
               {effectiveLessonNo < currentLessonNo
                 ? 'Training starten'
-                : 'Los geht&apos;s!'}
+                : 'Los gehts'}
             </Link>
           </Button>
         </div>

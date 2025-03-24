@@ -43,6 +43,7 @@ export function VideoPlayer({
   const playerRef = useRef<ReactPlayer>(null);
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
+  const controlsRef = useRef<HTMLDivElement>(null);
   const [isReady, setIsReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +53,8 @@ export function VideoPlayer({
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
+  const [isControlsVisible, setIsControlsVisible] = useState(false);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Konvertiere Vimeo ID in URL - mehrere Formate testen
   // Zusätzliche Sicherheit: Prüfe, ob videoId überhaupt gesetzt ist
@@ -68,6 +71,46 @@ export function VideoPlayer({
       playerRef.current.seekTo(startTime, 'seconds');
     }
   }, [isReady, startTime]);
+
+  // Controls Auto-Hide Effekt
+  useEffect(() => {
+    const showControls = () => {
+      setIsControlsVisible(true);
+
+      // Clear any existing timeout
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
+
+      // Set a new timeout to hide controls after 3 seconds of inactivity
+      controlsTimeoutRef.current = setTimeout(() => {
+        if (!playing) return; // Don't hide controls if video is paused
+        setIsControlsVisible(false);
+      }, 3000);
+    };
+
+    // Add event listeners to the container
+    const container = playerContainerRef.current;
+    if (container) {
+      container.addEventListener('mousemove', showControls);
+      container.addEventListener('touchstart', showControls);
+
+      // Show controls initially
+      showControls();
+    }
+
+    // Cleanup
+    return () => {
+      if (container) {
+        container.removeEventListener('mousemove', showControls);
+        container.removeEventListener('touchstart', showControls);
+      }
+
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
+    };
+  }, [playing]);
 
   // Handle player ready
   const handleReady = () => {
@@ -117,6 +160,41 @@ export function VideoPlayer({
 
   const handlePlayPause = () => {
     setPlaying(!playing);
+    setIsControlsVisible(true);
+
+    // If we're resuming playback, set a timeout to hide controls
+    if (!playing) {
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
+
+      controlsTimeoutRef.current = setTimeout(() => {
+        setIsControlsVisible(false);
+      }, 3000);
+    }
+  };
+
+  const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only handle clicks directly on the container, not on its controls
+    if (controlsRef.current && controlsRef.current.contains(e.target as Node)) {
+      return;
+    }
+
+    // If we clicked on the progress bar, don't toggle play/pause
+    if (
+      progressBarRef.current &&
+      progressBarRef.current.contains(e.target as Node)
+    ) {
+      return;
+    }
+
+    // Wenn wir auf den Play/Pause-Button in der Mitte geklickt haben, nicht hier behandeln
+    const target = e.target as HTMLElement;
+    if (target.closest('.center-play-button')) {
+      return;
+    }
+
+    handlePlayPause();
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -145,18 +223,30 @@ export function VideoPlayer({
     }
   };
 
-  // Handle timeline click to jump to a specific time point
-  const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  // Handle timeline interaction to jump to a specific time point
+  const handleTimelineInteraction = (clientX: number) => {
     if (!progressBarRef.current || !playerRef.current || !isReady) return;
 
     const rect = progressBarRef.current.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left;
+    const offsetX = clientX - rect.left;
     const clickPositionRatio = offsetX / rect.width;
     const seekToTime = duration * clickPositionRatio;
 
     // Seek to the clicked position
     playerRef.current.seekTo(seekToTime, 'seconds');
     setProgress(seekToTime);
+  };
+
+  // Mouse click handler for timeline
+  const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    handleTimelineInteraction(e.clientX);
+  };
+
+  // Touch handler for timeline
+  const handleTimelineTouch = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length > 0) {
+      handleTimelineInteraction(e.touches[0].clientX);
+    }
   };
 
   // Handle playback rate change
@@ -176,6 +266,7 @@ export function VideoPlayer({
         },
         className
       )}
+      onClick={handleContainerClick}
     >
       {isLoading && (
         <div className='absolute inset-0 flex items-center justify-center bg-gray-900 z-10'>
@@ -210,6 +301,7 @@ export function VideoPlayer({
           onReady={handleReady}
           onError={handleError}
           onEnded={handleEnded}
+          playsinline={true}
           config={{
             vimeo: {
               playerOptions: {
@@ -221,6 +313,7 @@ export function VideoPlayer({
                 pip: true,
                 portrait: false,
                 title: false,
+                playsinline: true,
               },
             },
           }}
@@ -234,13 +327,40 @@ export function VideoPlayer({
           : 'Video wird geladen'}
       </div>
 
+      {/* Play/Pause Indikator in der Mitte - Erscheint bei Hover als Overlay */}
+      <div
+        className={`absolute inset-0 flex items-center justify-center z-10 ${
+          playing ? 'opacity-0 hover:opacity-100' : 'opacity-100'
+        } transition-opacity duration-300 pointer-events-none`}
+      >
+        <div
+          className='bg-black bg-opacity-50 rounded-full p-4 cursor-pointer hover:bg-opacity-70 transition-all center-play-button pointer-events-auto'
+          onClick={(e) => {
+            e.stopPropagation();
+            handlePlayPause();
+          }}
+        >
+          {playing ? (
+            <Pause size={32} className='text-white' />
+          ) : (
+            <Play size={32} className='text-white' />
+          )}
+        </div>
+      </div>
+
       {/* Custom Controls Overlay */}
-      <div className='absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black to-transparent opacity-0 hover:opacity-100 transition-opacity'>
+      <div
+        ref={controlsRef}
+        className={`absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black to-transparent transition-opacity duration-300 ${
+          isControlsVisible ? 'opacity-100' : 'opacity-0'
+        } z-20`}
+        onClick={(e) => e.stopPropagation()} // Prevent click from bubbling to container
+      >
         <div className='flex items-center justify-between'>
           <Button
             variant='ghost'
             size='icon'
-            className='text-white'
+            className='text-white touch-manipulation'
             onClick={handlePlayPause}
           >
             {playing ? <Pause size={20} /> : <Play size={20} />}
@@ -259,7 +379,7 @@ export function VideoPlayer({
                 <Button
                   variant='ghost'
                   size='sm'
-                  className='text-white text-xs'
+                  className='text-white text-xs touch-manipulation'
                 >
                   {playbackRate}x <ChevronDown size={12} className='ml-1' />
                 </Button>
@@ -293,7 +413,7 @@ export function VideoPlayer({
             <Button
               variant='ghost'
               size='icon'
-              className='text-white'
+              className='text-white touch-manipulation'
               onClick={handleToggleMute}
             >
               {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
@@ -306,13 +426,13 @@ export function VideoPlayer({
               step={0.1}
               value={volume}
               onChange={handleVolumeChange}
-              className='w-20'
+              className='w-20 touch-manipulation'
             />
 
             <Button
               variant='ghost'
               size='icon'
-              className='text-white'
+              className='text-white touch-manipulation'
               onClick={handleFullscreen}
             >
               <Maximize2 size={20} />
@@ -323,8 +443,9 @@ export function VideoPlayer({
         {/* Progress Bar (Clickable Timeline) */}
         <div
           ref={progressBarRef}
-          className='w-full bg-gray-600 h-2 mt-2 rounded-full overflow-hidden cursor-pointer'
+          className='w-full bg-gray-600 h-3 mt-2 rounded-full overflow-hidden cursor-pointer touch-manipulation'
           onClick={handleTimelineClick}
+          onTouchStart={handleTimelineTouch}
         >
           <div
             className='bg-[#4AA4DE] h-full'
