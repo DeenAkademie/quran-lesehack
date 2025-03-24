@@ -25,11 +25,15 @@ export default function QuizzesPage() {
     (progressError &&
       typeof progressError === 'object' &&
       'message' in progressError &&
-      (progressError as any).message?.includes('No active session')) ||
+      (progressError as { message: string }).message?.includes(
+        'No active session'
+      )) ||
     (lessonError &&
       typeof lessonError === 'object' &&
       'message' in lessonError &&
-      (lessonError as any).message?.includes('No active session'));
+      (lessonError as { message: string }).message?.includes(
+        'No active session'
+      ));
 
   // If not logged in, show a login message
   if (isSessionError) {

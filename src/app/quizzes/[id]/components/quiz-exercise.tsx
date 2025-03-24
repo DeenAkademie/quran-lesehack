@@ -407,12 +407,12 @@ export function QuizExercise({ lessonId }: QuizExerciseProps) {
   // Trainingsmodus im Titel anzeigen, wenn aktiv
   const titlePrefix = isTrainingMode ? 'Training: ' : '';
 
-  const quizDescription =
-    exercise?.exercise_type === 'pattern'
-      ? 'Du trainierst die häufigsten Wortmuster im Koran. Dies sind keine echten Wörter, sie klingen nur ähnlich wie häufig vorkommende Wörter.'
-      : exercise?.exercise_type === 'letter_recognition'
-      ? 'Identifiziere den richtigen arabischen Buchstaben aus mehreren Optionen.'
-      : 'Übe das Schreiben des arabischen Buchstabens in verschiedenen Positionen.';
+  // const quizDescription =
+  //   exercise?.exercise_type === 'pattern'
+  //     ? 'Du trainierst die häufigsten Wortmuster im Koran. Dies sind keine echten Wörter, sie klingen nur ähnlich wie häufig vorkommende Wörter.'
+  //     : exercise?.exercise_type === 'letter_recognition'
+  //     ? 'Identifiziere den richtigen arabischen Buchstaben aus mehreren Optionen.'
+  //     : 'Übe das Schreiben des arabischen Buchstabens in verschiedenen Positionen.';
 
   return (
     <div className='p-6'>
@@ -471,21 +471,21 @@ export function QuizExercise({ lessonId }: QuizExerciseProps) {
         </div>
 
         <div className='text-center mb-6'>
-          <p className='max-w-2xl mx-auto'>{quizDescription}</p>
+          {/* <p className='max-w-2xl mx-auto'>{quizDescription}</p> */}
         </div>
 
         {exercise.exercise_type === 'pattern' && question && (
           <div className='mb-8'>
-            <div className='text-center mb-6'>
-              <div className='text-4xl font-arabic mb-4'>{question.text}</div>
-              {question.mp3_url && (
+            <div className='text-center pb-30 pt-20'>
+              <div className='text-7xl font-arabic mb-4'>{question.text}</div>
+              {/* {question.mp3_url && (
                 <audio
                   controls
                   className='mx-auto mb-4'
                   src={question.mp3_url}
                   autoPlay
                 ></audio>
-              )}
+              )} */}
             </div>
 
             <div className='grid grid-cols-2 gap-4 max-w-3xl mx-auto'>
