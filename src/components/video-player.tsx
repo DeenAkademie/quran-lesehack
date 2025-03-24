@@ -55,6 +55,31 @@ export function VideoPlayer({
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isControlsVisible, setIsControlsVisible] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
+
+  // Detect mobile device
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Check if device is mobile
+    const checkMobile = () => {
+      const userAgent =
+        navigator.userAgent || navigator.vendor || window.navigator.userAgent;
+      const isMobileDevice =
+        /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+          userAgent.toLowerCase()
+        );
+      setIsMobile(isMobileDevice);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   // Konvertiere Vimeo ID in URL - mehrere Formate testen
   // Zusätzliche Sicherheit: Prüfe, ob videoId überhaupt gesetzt ist
@@ -116,6 +141,7 @@ export function VideoPlayer({
   const handleReady = () => {
     setIsReady(true);
     setIsLoading(false);
+    setError(null); // Clear any previous errors
     console.log(`Video player ready - Video ID: ${videoId}`);
   };
 
@@ -138,13 +164,32 @@ export function VideoPlayer({
   // Referenz für den 90%-Status
   const hasReachedNinetyPercent = useRef(false);
 
-  // Handle player error
+  // Handle player error with retry
   const handleError = (error: unknown) => {
     console.error('Video player error:', error);
-    setError(
-      'Fehler beim Laden des Videos. Bitte versuche es später noch einmal.'
-    );
-    setIsLoading(false);
+
+    // Try to reload the player if we haven't reached max retries
+    if (retryCount < maxRetries) {
+      setRetryCount((prev) => prev + 1);
+      setIsLoading(true);
+      setError(
+        `Fehler beim Laden des Videos. Automatischer Wiederverbindungsversuch (${
+          retryCount + 1
+        }/${maxRetries})...`
+      );
+
+      // Wait a moment and try again
+      setTimeout(() => {
+        // Force a re-render by updating state
+        setIsLoading(false);
+        setIsLoading(true);
+      }, 2000);
+    } else {
+      setError(
+        'Fehler beim Laden des Videos. Bitte versuche es später noch einmal oder überprüfe deine Internetverbindung.'
+      );
+      setIsLoading(false);
+    }
   };
 
   // Handle player ended
@@ -254,6 +299,19 @@ export function VideoPlayer({
     setPlaybackRate(rate);
   };
 
+  // Handle retry button click
+  const handleRetry = () => {
+    setError(null);
+    setIsLoading(true);
+    setRetryCount(0);
+
+    // Force a re-render
+    setTimeout(() => {
+      setIsLoading(false);
+      setIsLoading(true);
+    }, 100);
+  };
+
   return (
     <div
       ref={playerContainerRef}
@@ -275,8 +333,17 @@ export function VideoPlayer({
       )}
 
       {error && (
-        <div className='absolute inset-0 flex items-center justify-center bg-gray-900 z-10'>
-          <p className='text-red-500 p-4 bg-gray-800 rounded-md'>{error}</p>
+        <div className='absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-10 p-4'>
+          <p className='text-red-500 p-4 bg-gray-800 rounded-md text-center mb-4'>
+            {error}
+          </p>
+          <Button
+            variant='default'
+            className='bg-[#4AA4DE] hover:bg-[#3993CD] text-white'
+            onClick={handleRetry}
+          >
+            Video neu laden
+          </Button>
         </div>
       )}
 
@@ -314,6 +381,14 @@ export function VideoPlayer({
                 portrait: false,
                 title: false,
                 playsinline: true,
+                muted: isMobile, // Start muted on mobile (helps with autoplay)
+                transparent: false,
+                background: false,
+                speed: true,
+                // Mobile-specific optimizations
+                autoplay: isMobile ? false : autoPlay,
+                loop: false,
+                byline: false,
               },
             },
           }}
