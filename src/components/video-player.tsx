@@ -81,14 +81,9 @@ export function VideoPlayer({
     };
   }, []);
 
-  // Konvertiere Vimeo ID in URL - mehrere Formate testen
-  // Zusätzliche Sicherheit: Prüfe, ob videoId überhaupt gesetzt ist
-  const isValidVideoId = videoId && videoId.trim().length > 0;
-  const videoUrl = isValidVideoId
-    ? videoId.includes('/')
-      ? videoId // Falls bereits eine vollständige URL übergeben wurde
-      : `https://vimeo.com/${videoId}` // Direkte Link-URL
-    : ''; // Leere URL, wenn keine ID vorhanden ist
+  // Konvertiere Vimeo ID in URL
+
+  const videoUrl = `https://vimeo.com/${videoId}`;
 
   // Setze Start-Position nach Ready-Event
   useEffect(() => {
@@ -316,7 +311,7 @@ export function VideoPlayer({
     <div
       ref={playerContainerRef}
       className={cn(
-        'overflow-hidden rounded-lg bg-black relative',
+        'relative w-full bg-black rounded-lg overflow-hidden',
         {
           'aspect-square': aspectRatio === 'square',
           'aspect-video': aspectRatio === 'video',
@@ -326,209 +321,169 @@ export function VideoPlayer({
       )}
       onClick={handleContainerClick}
     >
-      {isLoading && (
-        <div className='absolute inset-0 flex items-center justify-center bg-gray-900 z-10'>
-          <div className='w-12 h-12 rounded-full border-4 border-gray-600 border-t-[#4AA4DE] animate-spin'></div>
-        </div>
-      )}
-
-      {error && (
-        <div className='absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-10 p-4'>
-          <p className='text-red-500 p-4 bg-gray-800 rounded-md text-center mb-4'>
-            {error}
-          </p>
-          <Button
-            variant='default'
-            className='bg-[#4AA4DE] hover:bg-[#3993CD] text-white'
-            onClick={handleRetry}
-          >
-            Video neu laden
-          </Button>
-        </div>
-      )}
-
-      {!isValidVideoId ? (
-        <div className='absolute inset-0 flex items-center justify-center bg-gray-900 z-10'>
-          <p className='text-yellow-500 p-4 bg-gray-800 rounded-md'>
-            Keine gültige Video-ID gefunden.
-          </p>
+      {error ? (
+        <div className='absolute inset-0 flex items-center justify-center bg-black/80 z-50'>
+          <div className='text-center p-4'>
+            <p className='text-white mb-4'>{error}</p>
+            <Button onClick={handleRetry}>Erneut versuchen</Button>
+          </div>
         </div>
       ) : (
-        <ReactPlayer
-          ref={playerRef}
-          url={videoUrl}
-          width='100%'
-          height='100%'
-          playing={playing}
-          volume={volume}
-          muted={muted}
-          playbackRate={playbackRate}
-          onProgress={handleProgress}
-          onDuration={setDuration}
-          onReady={handleReady}
-          onError={handleError}
-          onEnded={handleEnded}
-          playsinline={true}
-          config={{
-            vimeo: {
-              playerOptions: {
-                responsive: true,
-                quality: 'auto',
-                controls: false,
-                autopause: false,
-                dnt: true,
-                pip: true,
-                portrait: false,
-                title: false,
-                playsinline: true,
-                muted: isMobile, // Start muted on mobile (helps with autoplay)
-                transparent: false,
-                background: false,
-                speed: true,
-                // Mobile-specific optimizations
-                autoplay: isMobile ? false : autoPlay,
-                loop: false,
-                byline: false,
+        <>
+          <ReactPlayer
+            ref={playerRef}
+            url={videoUrl}
+            width='100%'
+            height='100%'
+            playing={playing}
+            volume={volume}
+            muted={muted}
+            playbackRate={playbackRate}
+            onProgress={handleProgress}
+            onDuration={setDuration}
+            onReady={handleReady}
+            onError={handleError}
+            onEnded={handleEnded}
+            playsinline={true}
+            config={{
+              vimeo: {
+                playerOptions: {
+                  responsive: true,
+                  quality: 'auto',
+                  controls: false,
+                  autopause: false,
+                  dnt: true,
+                  pip: true,
+                  portrait: false,
+                  title: false,
+                  playsinline: true,
+                  muted: isMobile, // Start muted on mobile (helps with autoplay)
+                  transparent: false,
+                  background: false,
+                  speed: true,
+                  // Mobile-specific optimizations
+                  autoplay: isMobile ? false : autoPlay,
+                  loop: false,
+                  byline: false,
+                },
               },
-            },
-          }}
-        />
-      )}
+            }}
+          />
 
-      {/* Barrierefreiheit */}
-      <div className='sr-only' aria-live='polite'>
-        {isReady
-          ? `Video ${title} ist bereit zur Wiedergabe`
-          : 'Video wird geladen'}
-      </div>
-
-      {/* Play/Pause Indikator in der Mitte - Erscheint bei Hover als Overlay */}
-      <div
-        className={`absolute inset-0 flex items-center justify-center z-10 ${
-          playing ? 'opacity-0 hover:opacity-100' : 'opacity-100'
-        } transition-opacity duration-300 pointer-events-none`}
-      >
-        <div
-          className='bg-black bg-opacity-50 rounded-full p-4 cursor-pointer hover:bg-opacity-70 transition-all center-play-button pointer-events-auto'
-          onClick={(e) => {
-            e.stopPropagation();
-            handlePlayPause();
-          }}
-        >
-          {playing ? (
-            <Pause size={32} className='text-white' />
-          ) : (
-            <Play size={32} className='text-white' />
+          {/* Loading Overlay */}
+          {isLoading && (
+            <div className='absolute inset-0 flex items-center justify-center bg-black/50 z-40'>
+              <div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white'></div>
+            </div>
           )}
-        </div>
-      </div>
 
-      {/* Custom Controls Overlay */}
-      <div
-        ref={controlsRef}
-        className={`absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black to-transparent transition-opacity duration-300 ${
-          isControlsVisible ? 'opacity-100' : 'opacity-0'
-        } z-20`}
-        onClick={(e) => e.stopPropagation()} // Prevent click from bubbling to container
-      >
-        <div className='flex items-center justify-between'>
-          <Button
-            variant='ghost'
-            size='icon'
-            className='text-white touch-manipulation'
-            onClick={handlePlayPause}
+          {/* Controls Overlay */}
+          <div
+            ref={controlsRef}
+            className={cn(
+              'absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity duration-300',
+              {
+                'opacity-100': isControlsVisible,
+                'opacity-0': !isControlsVisible,
+              }
+            )}
           >
-            {playing ? <Pause size={20} /> : <Play size={20} />}
-          </Button>
+            {/* Timeline */}
+            <div
+              ref={progressBarRef}
+              className='relative h-1 bg-white/30 cursor-pointer mb-2'
+              onClick={handleTimelineClick}
+              onTouchEnd={handleTimelineTouch}
+            >
+              <div
+                className='absolute h-full bg-white'
+                style={{ width: `${(progress / duration) * 100}%` }}
+              />
+            </div>
 
-          <div className='flex items-center space-x-2 text-white text-sm'>
-            <span>{formatTime(progress)}</span>
-            <span>/</span>
-            <span>{formatTime(duration)}</span>
-          </div>
-
-          <div className='flex items-center space-x-2'>
-            {/* Playback Rate Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <div className='flex items-center justify-between'>
+              <div className='flex items-center space-x-2'>
                 <Button
                   variant='ghost'
-                  size='sm'
-                  className='text-white text-xs touch-manipulation'
+                  size='icon'
+                  onClick={handlePlayPause}
+                  className='text-white hover:text-white/80'
                 >
-                  {playbackRate}x <ChevronDown size={12} className='ml-1' />
+                  {playing ? (
+                    <Pause className='h-5 w-5' />
+                  ) : (
+                    <Play className='h-5 w-5' />
+                  )}
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end'>
-                <DropdownMenuItem onClick={() => handlePlaybackRateChange(0.5)}>
-                  0.5x
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handlePlaybackRateChange(0.75)}
+
+                <div className='flex items-center space-x-1'>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    onClick={handleToggleMute}
+                    className='text-white hover:text-white/80'
+                  >
+                    {muted ? (
+                      <VolumeX className='h-5 w-5' />
+                    ) : (
+                      <Volume2 className='h-5 w-5' />
+                    )}
+                  </Button>
+                  <input
+                    type='range'
+                    min='0'
+                    max='1'
+                    step='0.1'
+                    value={volume}
+                    onChange={handleVolumeChange}
+                    className='w-20'
+                  />
+                </div>
+
+                <span className='text-white text-sm'>
+                  {formatTime(progress)} / {formatTime(duration)}
+                </span>
+              </div>
+
+              <div className='flex items-center space-x-2'>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='text-white hover:text-white/80'
+                    >
+                      <ChevronDown className='h-5 w-5' />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {[0.5, 1, 1.25, 1.5, 2].map((rate) => (
+                      <DropdownMenuItem
+                        key={rate}
+                        onClick={() => handlePlaybackRateChange(rate)}
+                        className={cn({
+                          'bg-accent': playbackRate === rate,
+                        })}
+                      >
+                        {rate}x
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  onClick={handleFullscreen}
+                  className='text-white hover:text-white/80'
                 >
-                  0.75x
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handlePlaybackRateChange(1)}>
-                  1x (Normal)
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handlePlaybackRateChange(1.25)}
-                >
-                  1.25x
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handlePlaybackRateChange(1.5)}>
-                  1.5x
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handlePlaybackRateChange(2)}>
-                  2x
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button
-              variant='ghost'
-              size='icon'
-              className='text-white touch-manipulation'
-              onClick={handleToggleMute}
-            >
-              {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-            </Button>
-
-            <input
-              type='range'
-              min={0}
-              max={1}
-              step={0.1}
-              value={volume}
-              onChange={handleVolumeChange}
-              className='w-20 touch-manipulation'
-            />
-
-            <Button
-              variant='ghost'
-              size='icon'
-              className='text-white touch-manipulation'
-              onClick={handleFullscreen}
-            >
-              <Maximize2 size={20} />
-            </Button>
+                  <Maximize2 className='h-5 w-5' />
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-
-        {/* Progress Bar (Clickable Timeline) */}
-        <div
-          ref={progressBarRef}
-          className='w-full bg-gray-600 h-3 mt-2 rounded-full overflow-hidden cursor-pointer touch-manipulation'
-          onClick={handleTimelineClick}
-          onTouchStart={handleTimelineTouch}
-        >
-          <div
-            className='bg-[#4AA4DE] h-full'
-            style={{ width: `${(progress / duration) * 100}%` }}
-          ></div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
-
