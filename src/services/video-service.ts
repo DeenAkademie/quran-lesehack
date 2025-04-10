@@ -285,6 +285,15 @@ export async function getVideo(videoId: number): Promise<{
   }
 }
 
+/**
+ * Aktualisiert den Fortschritt eines Videos für den aktuellen Benutzer.
+ * 
+ * @param videoId - ID des Videos
+ * @param progressPercent - Fortschritt in Prozent (0-100)
+ * @param positionSeconds - Aktuelle Position im Video in Sekunden
+ * @param status - Optional: Status des Videos ('available' oder 'completed')
+ * @returns Promise mit dem aktualisierten VideoProgress oder null bei Fehler
+ */
 export async function updateVideoProgress(
   videoId: number,
   progressPercent: number,
@@ -292,12 +301,9 @@ export async function updateVideoProgress(
   status?: 'available' | 'completed'
 ): Promise<VideoProgress | null> {
   try {
-    // Wenn keine gültige ID oder wir nicht "completed" markieren, nichts tun
-    if (!videoId || videoId <= 0 || status !== 'completed') {
-      console.log('Überspringe Update: Ungültige Parameter', {
-        videoId,
-        status,
-      });
+    // Wenn keine gültige ID, nichts tun
+    if (!videoId || videoId <= 0) {
+      console.error('Ungültige Video-ID:', videoId);
       return null;
     }
 
@@ -310,31 +316,26 @@ export async function updateVideoProgress(
       return null;
     }
 
-    // Stelle sicher, dass alle Werte gültig sind
-    const validVideoId = parseInt(String(videoId), 10);
-    const validProgressPercent = 100; // Immer 100%
+    // Begrenze progressPercent auf 100%
+    const validProgressPercent = Math.min(Math.max(progressPercent, 0), 100);
     const validPositionSeconds = Math.max(Math.round(positionSeconds || 0), 0);
 
-    // Super vereinfachter Request - wir markieren nur als abgeschlossen
+    // Erstellung des Request-Bodies
     const requestBody = {
-      video_id: validVideoId,
+      video_id: videoId,
       progress_percent: validProgressPercent,
       current_position_seconds: validPositionSeconds,
-      mark_completed: true, // Immer als abgeschlossen markieren
+      mark_completed: status === 'completed',
     };
 
     console.log(
-      'Markiere Video als abgeschlossen:',
-      JSON.stringify(requestBody)
+      status === 'completed'
+        ? 'Markiere Video als abgeschlossen:'
+        : 'Aktualisiere Videofortschritt:',
+      requestBody
     );
 
-    // Überprüfe, ob der Request-Body gültig ist
-    if (!requestBody.video_id) {
-      console.error('Ungültiger Request-Body: video_id fehlt', requestBody);
-      return null;
-    }
-
-    // API-Aufruf mit explizitem JSON.stringify für den Body
+    // Edge Function aufrufen
     const { data, error } = await supabase.functions.invoke(
       'video_progress_update',
       {
@@ -342,16 +343,16 @@ export async function updateVideoProgress(
           Authorization: `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody), // Explizit als String senden
+        body: requestBody,
       }
     );
 
     if (error) {
-      console.error('Error marking video as completed:', error);
+      console.error('Error updating video progress:', error);
       return null;
     }
 
-    console.log('Erfolgreiche Antwort:', data);
+    console.log('Fortschritt erfolgreich aktualisiert:', data);
     return data?.data || null;
   } catch (error) {
     console.error('Error in updateVideoProgress:', error);

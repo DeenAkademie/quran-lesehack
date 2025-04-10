@@ -15,8 +15,6 @@ export default function QSKLessonPage() {
   const router = useRouter();
   const moduleId = parseInt(params.id as string, 10);
   const videoId = parseInt(params.lessonId as string, 10);
-  const [currentProgress, setCurrentProgress] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [video, setVideo] = useState<Video | null>(null);
@@ -30,60 +28,36 @@ export default function QSKLessonPage() {
     id: number;
     title: string;
   } | null>(null);
+  const [nextVideoUnlocked, setNextVideoUnlocked] = useState(false);
 
   // Video-Daten laden
   useEffect(() => {
     const fetchVideoData = async () => {
       setIsLoading(true);
       try {
-        console.log('Fetching video data for videoId:', videoId);
         const result = await getVideo(videoId);
 
-        console.log('Video API Raw Response:', JSON.stringify(result, null, 2));
-
-        // Check API response structure to see what we're actually getting
-        console.log('Response keys:', Object.keys(result));
-
-        // Analyze the video data structure from the response
-        const videoDataFromAPI = result.video;
-        console.log(
-          'Video data structure:',
-          videoDataFromAPI ? Object.keys(videoDataFromAPI) : 'No video data'
-        );
-
-        if (videoDataFromAPI) {
-          console.log('Vimeo ID from API:', videoDataFromAPI.vimeo_id);
-        }
-
-        // Extract data based on API structure
-        const currentVideo = videoDataFromAPI || null;
-        const next = result.nextVideo || null;
-        const prev = result.prevVideo || null;
-        const moduleData = result.module || null;
-        const section = result.section || null;
-
-        console.log('Extracted currentVideo:', currentVideo);
-        console.log('Extracted next:', next);
-        console.log('Extracted prev:', prev);
-        console.log('Extracted moduleData:', moduleData);
-        console.log('Extracted section:', section);
-
-        if (currentVideo) {
-          setVideo(currentVideo);
-          setNextVideo(next);
-          setPrevVideo(prev);
+        if (result.video) {
+          setVideo(result.video);
+          setNextVideo(result.nextVideo);
+          setPrevVideo(result.prevVideo);
           setModuleInfo(
-            moduleData ? { id: moduleData.id, title: moduleData.title } : null
+            result.module
+              ? { id: result.module.id, title: result.module.title }
+              : null
           );
           setSectionInfo(
-            section ? { id: section.id, title: section.title } : null
+            result.section
+              ? { id: result.section.id, title: result.section.title }
+              : null
           );
 
-          // Setze den initialen Fortschritt
-          if (currentVideo.progress) {
-            console.log('Setting progress from:', currentVideo.progress);
-            setCurrentProgress(currentVideo.progress.progress_percent || 0);
-            setCurrentTime(currentVideo.progress.last_position_seconds || 0);
+          // Prüfen, ob das nächste Video bereits freigeschaltet ist
+          if (
+            result.video.progress &&
+            result.video.progress.status === 'completed'
+          ) {
+            setNextVideoUnlocked(true);
           }
         } else {
           console.error('No video data found in API response');
@@ -100,169 +74,23 @@ export default function QSKLessonPage() {
       }
     };
 
-    fetchVideoData();
+    if (videoId) {
+      fetchVideoData();
+    }
   }, [videoId, toast]);
 
-  // Funktion zum Aktualisieren des Fortschritts - stark vereinfacht
-  const handleProgressUpdate = async (
-    progressPercent: number,
-    seconds: number
-  ) => {
-    // Wenn das Video noch nicht geladen ist, nichts tun
-    if (!video || !video.id) return;
-
-    // Aktualisiere den lokalen State
-    setCurrentProgress(progressPercent);
-    setCurrentTime(seconds);
-
-    // Wir reagieren nur, wenn mindestens 99% erreicht wurden
-    if (progressPercent >= 99) {
-      console.log(
-        'Video zu 99% oder mehr angesehen. Markiere als abgeschlossen.'
-      );
-
-      try {
-        // Nur EINMAL zum Server senden (wenn noch nicht auf 99%)
-        if (currentProgress < 99) {
-          await updateVideoProgress(
-            video.id,
-            100, // Immer als 100% speichern
-            seconds,
-            'completed' // Immer als abgeschlossen markieren
-          );
-
-          toast({
-            title: 'Video abgeschlossen!',
-            description: nextVideo
-              ? 'Du kannst jetzt zur nächsten Lektion übergehen.'
-              : 'Super! Modul erfolgreich abgeschlossen.',
-          });
-        }
-      } catch (error) {
-        console.error('Fehler beim Markieren als abgeschlossen:', error);
-      }
-    }
-  };
-
-  // Füge einen Effekt hinzu, um temporäre Fortschrittsdaten anzuwenden, sobald das Video geladen ist
-  useEffect(() => {
-    if (!video || !video.id || video.id <= 0) return;
-
-    // Prüfe, ob temporäre Fortschrittsdaten vorhanden sind
-    const tempProgressKey = `temp_progress_${video.id}`;
-    const tempProgressData = localStorage.getItem(tempProgressKey);
-
-    if (tempProgressData) {
-      try {
-        const { progressPercent, seconds, timestamp } =
-          JSON.parse(tempProgressData);
-
-        // Nur anwenden, wenn die Daten nicht älter als 5 Minuten sind
-        const now = Date.now();
-        const fiveMinutesInMs = 5 * 60 * 1000;
-
-        if (now - timestamp < fiveMinutesInMs) {
-          console.log(
-            `Wende temporären Fortschritt für Video ${video.id} an:`,
-            progressPercent,
-            seconds
-          );
-          handleProgressUpdate(progressPercent, seconds);
-        }
-
-        // Temporäre Daten löschen
-        localStorage.removeItem(tempProgressKey);
-      } catch (error) {
-        console.error(
-          'Fehler beim Anwenden temporärer Fortschrittsdaten:',
-          error
-        );
-        localStorage.removeItem(tempProgressKey);
-      }
-    }
-  }, [video]);
-
-  // Funktion zum Verarbeiten von ausstehenden Updates beim Laden
-  useEffect(() => {
+  // Funktion, die aufgerufen wird, wenn das Video zu Ende angesehen wurde
+  const handleVideoComplete = async () => {
     if (!video) return;
-
-    // Versuche ausstehende Updates zu senden
-    const processPendingUpdates = async () => {
-      const pendingUpdatesKey = 'pending_video_updates';
-      const pendingUpdates = JSON.parse(
-        localStorage.getItem(pendingUpdatesKey) || '[]'
-      );
-
-      if (pendingUpdates.length === 0) return;
-
-      // Filtere Updates für dieses Video
-      const thisVideoUpdates = pendingUpdates.filter(
-        (update) => update.videoId === video.id
-      );
-      const otherUpdates = pendingUpdates.filter(
-        (update) => update.videoId !== video.id
-      );
-
-      // Wenn keine Updates für dieses Video vorhanden sind, beenden
-      if (thisVideoUpdates.length === 0) return;
-
-      // Nehme das neueste Update für dieses Video
-      const latestUpdate = thisVideoUpdates.reduce(
-        (latest, current) =>
-          current.lastUpdated > latest.lastUpdated ? current : latest,
-        thisVideoUpdates[0]
-      );
-
-      try {
-        await updateVideoProgress(
-          latestUpdate.videoId,
-          latestUpdate.progressPercent,
-          latestUpdate.seconds,
-          latestUpdate.progressPercent >= 99 ? 'completed' : 'available'
-        );
-
-        // Aktualisiere die verbleibenden ausstehenden Updates
-        localStorage.setItem(pendingUpdatesKey, JSON.stringify(otherUpdates));
-      } catch (error) {
-        console.error('Error processing pending updates:', error);
-      }
-    };
-
-    // Versuche, den lokalgespeicherten Fortschritt wiederherzustellen
-    const restoreProgress = () => {
-      const progressKey = `video_progress_${video.id}`;
-      const savedProgress = localStorage.getItem(progressKey);
-
-      if (savedProgress) {
-        try {
-          const { progressPercent, seconds } = JSON.parse(savedProgress);
-          // Nur setzen, wenn der gespeicherte Fortschritt größer ist
-          if (progressPercent > currentProgress) {
-            setCurrentProgress(progressPercent);
-          }
-          if (seconds > currentTime) {
-            setCurrentTime(seconds);
-          }
-        } catch (error) {
-          console.error('Error restoring progress from localStorage:', error);
-        }
-      }
-    };
-
-    restoreProgress();
-    processPendingUpdates();
-  }, [video, currentProgress, currentTime]);
-
-  // Funktion bei Abschluss des Videos
-  const handleLessonComplete = async () => {
-    if (!video) return;
-
-    // Setze lokalen Fortschritt auf 100%
-    setCurrentProgress(100);
 
     try {
-      // Aktualisiere den Fortschritt in der Datenbank
-      await updateVideoProgress(video.id, 100, currentTime, 'completed');
+      console.log('Video wurde vollständig angesehen!');
+
+      // Video als abgeschlossen markieren und nächstes Video freischalten
+      await updateVideoProgress(video.id, 100, 0, 'completed');
+
+      // UI aktualisieren
+      setNextVideoUnlocked(true);
 
       toast({
         title: 'Video abgeschlossen!',
@@ -271,7 +99,7 @@ export default function QSKLessonPage() {
           : 'Super! Modul erfolgreich abgeschlossen.',
       });
     } catch (error) {
-      console.error('Error completing video:', error);
+      console.error('Fehler beim Abschließen des Videos:', error);
     }
   };
 
@@ -291,17 +119,6 @@ export default function QSKLessonPage() {
       router.push(`/quizzes/${video.exercise_id}`);
     }
   };
-
-  // Log current state for debugging after render
-  useEffect(() => {
-    console.log('Current state:');
-    console.log('Video:', video);
-    console.log('NextVideo:', nextVideo);
-    console.log('PrevVideo:', prevVideo);
-    console.log('ModuleInfo:', moduleInfo);
-    console.log('SectionInfo:', sectionInfo);
-    console.log('isLoading:', isLoading);
-  }, [video, nextVideo, prevVideo, moduleInfo, sectionInfo, isLoading]);
 
   return (
     <div className='p-6'>
@@ -332,24 +149,13 @@ export default function QSKLessonPage() {
             {sectionInfo && ` • ${sectionInfo.title}`}
           </p>
 
-          {/* Fortschrittsanzeige */}
-          <div className='w-full bg-gray-200 rounded-full h-2.5 mb-6'>
-            <div
-              className='bg-[#4AA4DE] h-2.5 rounded-full transition-all duration-300'
-              style={{ width: `${currentProgress}%` }}
-            ></div>
-          </div>
-
           {/* Video Player */}
           <div className='mb-6'>
-            <p className='mb-2'>Debug: Using Vimeo ID: {video.vimeo_id}</p>
             {video.vimeo_id ? (
               <VideoPlayer
                 videoId={video.vimeo_id}
-                title={video.title}
-                onProgress={handleProgressUpdate}
-                onComplete={handleLessonComplete}
-                startTime={currentTime}
+                onComplete={handleVideoComplete}
+                startTime={video.progress?.last_position_seconds || 0}
                 className='w-full rounded-lg overflow-hidden'
               />
             ) : (
@@ -397,7 +203,7 @@ export default function QSKLessonPage() {
               <Button
                 onClick={goToNextLesson}
                 className='bg-[#4AA4DE] hover:bg-[#3993CD] text-white px-6'
-                disabled={currentProgress < 99}
+                disabled={!nextVideoUnlocked}
               >
                 Nächstes Video
                 <ArrowRight className='ml-2 h-4 w-4' />
@@ -405,10 +211,9 @@ export default function QSKLessonPage() {
             )}
           </div>
 
-          {currentProgress < 99 && nextVideo && (
+          {!nextVideoUnlocked && nextVideo && (
             <p className='text-center text-sm text-gray-500 mt-4'>
-              Schaue mindestens 99% des Videos, um zur nächsten Lektion zu
-              gelangen.
+              Schaue das Video zu Ende, um zur nächsten Lektion zu gelangen.
             </p>
           )}
         </>
